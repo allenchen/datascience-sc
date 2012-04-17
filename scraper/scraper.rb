@@ -25,8 +25,6 @@ class Scraper
     end
   end
 
-  ResultsFile = File.join('results', "results_#{Time.now.to_i}.csv")
-
   attr_accessor :page, :results
 
   # @param [Hash] options
@@ -68,7 +66,11 @@ class Scraper
 
   def dump_results
     Log.debug "Taking a dump..."
-    CSV.open(ResultsFile, 'at') do |csv|
+    folder = File.join('results', @options[:section])
+    FileUtils.mkdir_p(folder)
+    path = File.join(folder, "results_#{Time.now.to_i}.csv")
+
+    CSV.open(path, 'at') do |csv|
       @results.each do |result|
         csv << result.to_a
       end
