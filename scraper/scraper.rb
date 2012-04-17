@@ -39,6 +39,7 @@ class Scraper
     }.merge(options)
 
     @page = nil
+    @results_log_name = "results_#{Time.now.to_i}.csv"
 
     # Maps from ID to object
     @maps = {}
@@ -68,7 +69,7 @@ class Scraper
     Log.debug "Taking a dump..."
     folder = File.join('results', @options[:section])
     FileUtils.mkdir_p(folder)
-    path = File.join(folder, "results_#{Time.now.to_i}.csv")
+    path = File.join(folder, @results_log_name)
 
     CSV.open(path, 'at') do |csv|
       @results.each do |result|
@@ -118,8 +119,9 @@ class Scraper
   def parse_row(tr)
     date, league, map, winner, loser = tr.css('td')[1..5]
     begin # date
-      yy, mm, dd = date.text().split('-').collect(&:to_i)
+      yy, mm, dd = date.text().split('-').collect(&:to_i).collect {|x| x<=0 ? 1 : x}
       yy += 2000
+
       date = Time.new(yy, mm, dd)
     end
 
