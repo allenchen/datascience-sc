@@ -26,12 +26,20 @@ class Scraper
   end
 
   ResultsFile = File.join('results', "results_#{Time.now.to_i}.csv")
-  PageDelay = 5
 
-  attr_accessor :page, :section, :results
+  attr_accessor :page, :results
 
-  def initialize(section="sc2-international")
-    @section = section
+  # @param [Hash] options
+  # @param options [String] :section default "sc2-international"
+  # @param options [Integer] :page Start page, default 1
+  # @param options [Float] :delay Inter-request delay (throttling)
+  def initialize(options={}) #section="sc2-international")
+    @options = {
+      :section => "sc2-international",
+      :page    => nil,
+      :delay   => 5
+    }.merge(options)
+
     @page = nil
 
     # Maps from ID to object
@@ -40,16 +48,19 @@ class Scraper
     @players = {}
 
     @results = []
-    @page_delay = PageDelay
     @mech = Mechanize.new do |agent|
       agent.user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.142 Safari/535.19'
     end
   end
 
   def scrape!
-    while next_page!
+    page_num = @options[:page]
+    Log.info "Starting on page #{page_num}" if page_num
+
+    while next_page!(page_num)
+      page_num = nil
       dump_results
-      sleep @page_delay
+      sleep @options[:delay]
     end
   end
 
@@ -66,8 +77,6 @@ class Scraper
   end
 
   def next_page!(start_page=nil)
-    raise ArgumentError, "start_page must be an int" if start_page and not start_page.is_a?(Integer)
-
     begin
       if @page and start_page.nil?
         unless next_link = @mech.page.link_with(:text => '>')
@@ -76,6 +85,7 @@ class Scraper
         @page = next_link.click
       else
         url = page_url(:page => start_page)
+        Log.debug "Starting at url #{url}"
         @mech.get(url)
         @page = @mech.page
       end
@@ -89,10 +99,12 @@ class Scraper
       end
     rescue OpenURI::HTTPError, Mechanize::ResponseCodeError => e
       if e.message.to_i == 503
-        #@page_delay *= 2
-        Log.debug "Timed out, PageDelay -> #{@page_delay}"
-        sleep @page_delay
+        #@options[:delay] *= 2
+        Log.debug "Timed out, delay = #{@options[:delay]}"
+        sleep @options[:delay]
         retry
+      else
+        raise
       end
     end
 
@@ -109,7 +121,14 @@ class Scraper
       date = Time.new(yy, mm, dd)
     end
 
-    league, map, winner, loser = [league, map, winner, loser].collect {|td| File.basename(td.at_css('a')['href'])}
+    league, map, winner, loser = [league, map, winner, loser].collect do |td|
+      id_name = if a = td.at_css('a')
+        a['href']
+      else
+        '0_UNKNOWN'
+      end
+      File.basename(id_name)
+    end
 
     league, map, winner, loser = [
       [ league, League ],
@@ -125,6 +144,8 @@ class Scraper
   end
 
   def page_url(opts={})
+    #return "http://www.teamliquid.net/tlpd/sc2-international/games"
+
     base_url = "http://www.teamliquid.net/tlpd/games/index.php"
 
     opts = {
@@ -132,11 +153,11 @@ class Scraper
     }.merge(opts)
 
     query = {
-      'section'              => @section,
-      'tabulator_page'       => 1,
+      'section'              => @options[:section],
+      'tabulator_page'       => opts[:page],
       'tabulator_order_col'  => 1,
       'tabulator_order_desc' => 1,
-      'tabulator_search'     => "#tblt-3922-#{opts[:page]}-1-DESC"
+#      'tabulator_search'     => "#tblt-3922-#{opts[:page]}-1-DESC"
     }
 
     uri = Addressable::URI.parse(base_url)
@@ -150,7 +171,7 @@ class Scraper
 end
 
 def main
-  s = Scraper.new("sc2-international")
+  s = Scraper.new(:section => "sc2-international")
   s.scrape!
 end
 
