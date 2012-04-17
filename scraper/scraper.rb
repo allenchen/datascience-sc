@@ -31,6 +31,7 @@ class Scraper
   # @param options [String] :section default "sc2-international"
   # @param options [Integer] :page Start page, default 1
   # @param options [Float] :delay Inter-request delay (throttling)
+  # @param options [String] :file Scrape this file instead of web
   def initialize(options={}) #section="sc2-international")
     @options = {
       :section => "sc2-international",
@@ -81,16 +82,24 @@ class Scraper
 
   def next_page!(start_page=nil)
     begin
-      if @page and start_page.nil?
-        unless next_link = @mech.page.link_with(:text => '>')
-          return false
+
+      # source = file
+      if @options[:file] and File.readable?(@options[:file])
+        Log.info "Using file #{@options[:file]}"
+        File.open(@options[:file]) { |f| @page = Nokogiri::HTML(f) }
+
+      else # source = web
+        if @page and start_page.nil?
+          unless next_link = @mech.page.link_with(:text => '>')
+            return false
+          end
+          @page = next_link.click
+        else
+          url = page_url(:page => start_page)
+          Log.debug "Starting at url #{url}"
+          @mech.get(url)
+          @page = @mech.page
         end
-        @page = next_link.click
-      else
-        url = page_url(:page => start_page)
-        Log.debug "Starting at url #{url}"
-        @mech.get(url)
-        @page = @mech.page
       end
 
       page_number = @page.search('input[name=tabulator_page]').first['value'].to_i
