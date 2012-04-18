@@ -1,0 +1,114 @@
+import csv
+import collections
+import sys
+import math
+import string
+from pandas import *
+import numpy as np
+from fmap import fmap
+
+# Make occupation data look like how the bubble graph expects it:
+# {
+#   "name": "graph",
+#   "children": 
+#     [
+#       { "name": "Democrat", 
+#         "children" :
+#           [
+#             { "name": "Barack Obama", "size": 100 }
+#           ] 
+#       },
+#       { "name": "Republican", 
+#         "children" :
+#           [
+#             { "name": "Mitt Romney", "size": 25 },
+#             { "name": "Rick Santorum", "size": 25 },
+#             { "name": "Newt Gingrich", "size": 25 },
+#             { "name": "Ron Paul", "size": 25 }
+#           ] 
+#       },
+#       { "name": "Libertarian", 
+#         "children" :
+#           [
+#             { "name": "RJ Harris", "size": 1 },
+#           ] 
+#       }
+#     ]
+# }
+
+#graph["children"][0]["children"]
+graph = { 
+    "name": "graph", 
+    "children": 
+    [
+        { "name": "Democrat",
+          "children" : []
+          },
+        { "name": "Republican",
+          "children" : []
+          },
+        { "name": "Libertarian",
+          "children": []
+          }
+        ]
+    }
+
+occupations = {
+    "Republican": fmap(),
+    "Democrat": fmap(),
+    "Libertarian": fmap()
+}
+
+def add_party_column(df):
+    party_map = {'P20002556': 0, 'P20003109': 0, 'P20002978': 0, 'P20002671': 2, 'P60003654': 0, 'P20002721': 0, 'P20003067': 0, 'P80003353': 0, 'P00003608': 0, 'P20003281': 0, 'P80000748': 0, 'P20002523': 0, 'P80003338': 1}
+    party_names = { 0: "Republican", 1: "Democrat", 2: "Libertarian" }
+    df.insert(len(df.columns), "party", '')
+    
+    # cache the id column
+    candidate_ids = df['cand_id']
+
+    for i in xrange(len(df)):
+        df['party'][i] = party_names[party_map[candidate_ids[i]]]
+
+#print "Processing Occupation Data + Adding Party"
+df = read_csv('P00000001-ALL.txt')
+add_party_column(df)
+
+for i,party in enumerate(df['party']):
+    occupations[party][df['contbr_occupation'][i]] += 1
+
+# output to .csv file
+# python prints dictionaries in almost-json format (need to replace ' with ") 
+
+# Need to prune these (there are a LOT of occupations!)
+# Take the top 50 of each.
+
+top_count = 50
+
+def scale_frequency(x):
+    return math.sqrt(x)
+
+for occupation, frequency in \
+        occupations["Democrat"].get_top_n(top_count, emitFrequencies=True):
+    if type(occupation) is float or occupation.lower().find("request") > 0:
+        # weird stuff is going on ;(
+        # request is for the "INFORMATION REQUESTED" stuff
+        continue
+    occupation = string.join(map(string.capitalize, occupation.split()))
+    graph["children"][0]["children"] += [{ "name": occupation, "size": scale_frequency(frequency) }]
+
+for occupation, frequency in \
+        occupations["Republican"].get_top_n(top_count, emitFrequencies=True):
+    if type(occupation) is float or occupation.lower().find("request") > 0:
+        continue
+    occupation = string.join(map(string.capitalize, occupation.split()))
+    graph["children"][1]["children"] += [{ "name": occupation, "size": scale_frequency(frequency) }]
+
+for occupation, frequency in \
+        occupations["Libertarian"].get_top_n(top_count, emitFrequencies=True):
+    if type(occupation) is float or occupation.lower().find("request") > 0:
+        continue
+    occupation = string.join(map(string.capitalize, occupation.split()))
+    graph["children"][2]["children"] += [{ "name": occupation, "size": scale_frequency(frequency) }]
+
+print graph

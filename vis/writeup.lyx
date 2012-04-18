@@ -1,0 +1,311 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\topmargin 1cm
+\bottommargin 1cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+
+\series bold
+Assignment 2
+\end_layout
+
+\begin_layout Author
+Allen Chen (allen.sl.chen@gmail.com)
+\end_layout
+
+\begin_layout Standard
+Using 2 late days; 2 late days left.
+\end_layout
+
+\begin_layout Section
+Data Preprocessing
+\end_layout
+
+\begin_layout Standard
+To preprocess my data, I had to perform a number of tasks for each visualization
+ to coerce it into the nice JSON format that each visualization required.
+\end_layout
+
+\begin_layout Subsection
+County per-capita Donation Amount Map
+\end_layout
+
+\begin_layout Standard
+The map required the most preprocessing.
+ The map actually combines three different datasets: the donation datasets,
+ a ZIP code-to-FIPS code (county ID) dataset
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+http://mcdc2.missouri.edu/pub/data/georef/zcta_master.Metadata.html
+\end_layout
+
+\end_inset
+
+, and FIPS-to-population dataset
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+http://www.census.gov/geo/www/2010census/centerpop2010/county/countycenters.html
+\end_layout
+
+\end_inset
+
+.
+ First, I had to process all ZIP code data from the donation dataset and
+ translate them to FIPS codes.
+ Then, I took the donation dataset and bucketized each total donation count
+ by FIPS code, and divided each bucket by the FIPS population.
+ The result was a JSON object which was keyed by FIPS code and had the value
+ of average per-capita donation amount.
+\end_layout
+
+\begin_layout Standard
+Some preprocessing was done for the diff view as well (though it could have
+ been implemented on the client side).
+ I took each per-capita donation amount for Republican and Democrat, and
+ subtracted them.
+ I normalized the data to [0,5], which allowed me to scale the data between
+ red and blue (2.5 was a indifferent color, whereas 0 was dark red and 5
+ was a dark blue).
+\end_layout
+
+\begin_layout Subsection
+Donator Occupations
+\end_layout
+
+\begin_layout Standard
+For the donator occupations, I keyed a hash on occupation and populated
+ the hash with occupation data from the donation dataset.
+ Then, I took the top 50 occupations from each of these datasets and output
+ them in a JSON format for the Bubble visualization.
+ The radius is a function of the 
+\series bold
+square root
+\series default
+ of the actual occupation count, since without the square root, the graph
+ would be unreadable (Retired would dominate the graph).
+\end_layout
+
+\begin_layout Subsection
+Donations over Time
+\end_layout
+
+\begin_layout Standard
+I decided that, for donations over time, each bar should represent the cumulativ
+e donations over a 7-day period to give decent granularity while maintaining
+ some sort of readibility on the graph.
+ I bucketized each donation into a 7-day period and added them up.
+\end_layout
+
+\begin_layout Subsection
+Individual Donation Amounts
+\end_layout
+
+\begin_layout Standard
+The problem initially with individual donation amounts was that the dataset
+ was huge - it basically required passing a significant portion of the full
+ donation dataset (all of the donation amounts).
+ To keep the amount of data passed relatively low, I instead passed a subsample
+ (a randomly-selected subset that was 10% the size of the original dataset).
+\end_layout
+
+\begin_layout Subsection
+Overall Donations Per Party & Candidate Donations
+\end_layout
+
+\begin_layout Standard
+These two visualizations essentially required the same dataset.
+ I preprocessed the data by bucketizing each total candidate donations by
+ party, and passed it to the client.
+ With the bar graph, there were a few extra data points I needed to pass
+ (mean value of Republican, Democrat and Libertarian donations).
+\end_layout
+
+\begin_layout Section
+Client-Side Data Transformations
+\end_layout
+
+\begin_layout Standard
+The client performs very little data transformation for most charts.
+\end_layout
+
+\begin_layout Standard
+For all charts, the client needs to normalize the data in order to fit the
+ data within the appropriate bounds.
+ For the 
+\series bold
+Donations over Time histogram
+\series default
+ (stacked view), the client needs to calculate the heights for the combined
+ histogram.
+ For the 
+\series bold
+Individual Donation Amounts boxplot
+\series default
+, the client needs to perform analysis to find the information for box plot.
+ For the 
+\series bold
+Overall Donations per Party pie chart
+\series default
+, the client needs to transform the individual (annotated) candidate donation
+ amounts to calculate the total party donation amount.
+\end_layout
+
+\begin_layout Section
+Visualization Intent
+\end_layout
+
+\begin_layout Subsection
+County per-capita Donation Amount Map
+\end_layout
+
+\begin_layout Standard
+This map portrays the average donation bias per county.
+ I want to show what areas of the country are most enthusiastic/politically-acti
+ve and which way they lean.
+ Another way of displaying this information is a geographically-positioned
+ bubble chart (size of bubble corresponding to per-capita donation amount).
+ To effictively display this geographic data, a map is required.
+\end_layout
+
+\begin_layout Subsection
+Donator Occupations
+\end_layout
+
+\begin_layout Standard
+I wanted to show what kind of people (occupation-wise) are most influential
+ in the donations to different parties of candidates.
+ A bubble chart was used because I wanted to display occupation frequencies
+ and compare them to other occupations very quickly.
+ A histogram was considered, but since there are so many data points, it
+ would require too much space to display this data.
+\end_layout
+
+\begin_layout Subsection
+Donations over Time
+\end_layout
+
+\begin_layout Standard
+The purpose of this visualization is to show what times of year the political
+ fundraising campaigns are most active.
+ With this method, we can easily compare the total amount of donations to
+ all campaigns (compared to a line graph, where we can't easily have a stacked
+ view to see the total amount per party).
+\end_layout
+
+\begin_layout Subsection
+Individual Donation Amounts Box Plot
+\end_layout
+
+\begin_layout Standard
+The box plot shows the typical (median) donation from a donator, and emphasizes
+ the vast difference between a typical donator and a major sponsor (Republicans:
+ $250 small donators vs.
+ $1,000,000+ from major sponsors).
+ A box plot because it conveys the most important details (median, 1st/3rd
+ quartile and outliers) for the question: How much money is each person
+ donating?
+\end_layout
+
+\begin_layout Subsection
+Overall Donations per Party Pie Chart
+\end_layout
+
+\begin_layout Standard
+From the second level, we can see the distribution of the donations amongst
+ Republican candidates, and we can see that the donations is extremely skewed.
+ I chose this method to display the overall donations because I wanted a
+ direct comparison that showed what percentage of donations go to Republicans,
+ Democrats and Libertarians (and corresponding candidates).
+ It very quickly answers the question: Which party has more donations? About
+ what percentage of total donations does a particular party have?
+\end_layout
+
+\begin_layout Subsection
+Candidate Donations Bullet Chart
+\end_layout
+
+\begin_layout Standard
+The candidate donations bullet chart shows the exact donation amounts per
+ candidate and the average donation amount per party (the black line that
+ is common amongst all candidates is the mean value of the Republican donations).
+ We can see that there are three Republican candidates that are considerably
+ ahead of that mean.
+ I chose this method to portray the disparity in donation amounts for Republican
+ candidates.
+ It answers the questions: Who has the highest Republican donation amount?
+ Who is 
+\begin_inset Quotes eld
+\end_inset
+
+winning
+\begin_inset Quotes erd
+\end_inset
+
+ in donations amongst Republicans?
+\end_layout
+
+\end_body
+\end_document

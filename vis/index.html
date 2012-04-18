@@ -1,0 +1,68 @@
+<html>
+
+  <head>
+    <link rel="stylesheet" href="static/css/blueprint/screen.css" type="text/css">
+    <link rel="stylesheet" href="static/css/dashboard.css" type="text/css">
+    <link rel="stylesheet" href="static/css/colors.css" type="text/css" />
+    <link rel="stylesheet" href="static/css/shadowbox.css" type="text/css" />
+    <script type="text/javascript" src="static/js/jquery.js"></script>
+    <script type="text/javascript" src="static/js/shadowbox.js"></script>
+    <script type="text/javascript" src="static/js/d3/d3.v2.js"></script>
+    <script type="text/javascript" src="static/js/d3/d3.csv.js"></script>
+    <script type="text/javascript" src="static/js/d3/d3.layout.js"></script>
+    <script type="text/javascript" src="static/js/science/science.js"></script>
+    <script type="text/javascript" src="static/js/science/science.lin.js"></script>
+    <script type="text/javascript" src="static/js/science/science.stats.js"></script>
+    <script type="text/javascript" src="static/js/dashboard.js"></script>
+
+    <title>D3 Dashboard</title>
+  </head>
+
+  <body>
+    <!-- Container for Blueprint Grid -->
+    <div class="container">
+
+      <div class="span-24 last" id="header">
+	<h3 id="header-text">StarCraft 2 Player Dashboard</h3>
+      </div>
+      <hr />
+
+      <div class="visualization_2set">
+	<div class="visualization_header">
+	  <h3 class="visualization_title">Player Statistics</h3>
+	  <input type="checkbox" class="bubble_checkbox" id="bubble_checkbox_republican" name="republican">
+	  <label for="bubble_checkbox_republican">Zerg</label>
+	  <input type="checkbox" class="bubble_checkbox" id="bubble_checkbox_democrat">
+	  <label for="bubble_checkbox_democrat">Protoss</label>
+	  <input type="checkbox" class="bubble_checkbox" id="bubble_checkbox_libertarian">
+	  <label for="bubble_checkbox_libertarian">Terran</label>
+	</div>
+	<div id="bubble_chart"></div>
+	<script type="text/javascript" src="static/js/bubble.js"></script>
+      </div>
+      <div id="barchart_placeholder">
+	<div class="visualization_2set" id="barchart_container">
+	  <div class="visualization_header">
+	    <h3 class="visualization_title"><a href="#" id="bars_expand">Race wins per Tournament</a></h3>
+	    <input type="checkbox" class="barchart_checkbox" id="barchart_checkbox_republican">
+	    <label for="barchart_checkbox_republican">Zerg</label>
+	    <input type="checkbox" class="barchart_checkbox" id="barchart_checkbox_democrat">
+	    <label for="barchart_checkbox_democrat">Protoss</label>
+	    <input type="checkbox" class="barchart_checkbox" id="barchart_checkbox_libertarian">
+	    <label for="barchart_checkbox_libertarian">Terran</label>
+	    <a href="#" id="bars_stack">[ + ]</a>
+	    <hr style="margin-top:10px; margin-bottom:10px;">
+	    <div class="hover_values" id="barchart_hover_value"></div>	
+	    <div class="hover_explanations" id="barchart_hover_text">Hover for Details</div>
+	  </div>
+	  <div style="height:30px;"></div>
+	  <div id="barchart"></div>
+	  <script type="text/javascript" src="static/js/bars.js"></script>
+	</div>
+      </div>
+
+      <div id="footer">Allen Chen, Jonathan Ko, Young Kim</div>
+
+    </div>
+    
+  </body>

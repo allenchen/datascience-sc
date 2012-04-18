@@ -1,0 +1,113 @@
+<html>
+
+  <head>
+    <link rel="stylesheet" href="static/css/blueprint/screen.css" type="text/css">
+    <link rel="stylesheet" href="static/css/dashboard.css" type="text/css">
+    <link rel="stylesheet" href="static/css/colors.css" type="text/css" />
+    <link rel="stylesheet" href="static/css/shadowbox.css" type="text/css" />
+    <script type="text/javascript" src="static/js/jquery.js"></script>
+    <script type="text/javascript" src="static/js/shadowbox.js"></script>
+    <script type="text/javascript" src="static/js/d3/d3.v2.js"></script>
+    <script type="text/javascript" src="static/js/d3/d3.csv.js"></script>
+    <script type="text/javascript" src="static/js/d3/d3.layout.js"></script>
+    <script type="text/javascript" src="static/js/science/science.js"></script>
+    <script type="text/javascript" src="static/js/science/science.lin.js"></script>
+    <script type="text/javascript" src="static/js/science/science.stats.js"></script>
+    <script type="text/javascript" src="static/js/dashboard.js"></script>
+
+    <title>D3 Dashboard</title>
+  </head>
+
+  <body>
+    <!-- Container for Blueprint Grid -->
+    <div class="container">
+
+      <div class="span-24 last" id="header">
+	<h3 id="header-text">D3 Dashboard</h3>
+      </div>
+      <hr />
+
+      <div class="visualization_header">
+	<h3 class="visualization_title">County per capita Donation Amount</h3>
+      </div>
+      <ul class="map_menu">
+	<li id="map_all_party_li"><a href="#" id="map_all_party_button">Diff*</a></li>
+	<li id="map_republican_li"><a href="#" id="map_republican_button">Republican</a></li>
+	<li id="map_democrat_li"><a href="#" id="map_democrat_button">Democrat</a></li>
+	<li id="map_libertarian_li"><a href="#" id="map_libertarian_button">Libertarian</a></li>
+      </ul>
+      
+      <div class="map" id="map_graph" width="800" height="500"></div>
+      <script type="text/javascript" src="static/js/map.js"></script>
+      <div class="visualization_explanation">The intensity of the color represents the average per capita donation amount: total amount donated per county / county population.  Diff view only covers the difference between Democrat and Republican per-capita donation amount.</div>
+      <div style="clear:both; height:15px;"></div>
+      <hr>
+      <div class="visualization_2set">
+	<div class="visualization_header">
+	  <h3 class="visualization_title">Donator Occupations</h3>
+	  <input type="checkbox" class="bubble_checkbox" id="bubble_checkbox_republican" name="republican">
+	  <label for="bubble_checkbox_republican">Republican</label>
+	  <input type="checkbox" class="bubble_checkbox" id="bubble_checkbox_democrat">
+	  <label for="bubble_checkbox_democrat">Democrat</label>
+	  <input type="checkbox" class="bubble_checkbox" id="bubble_checkbox_libertarian">
+	  <label for="bubble_checkbox_libertarian">Libertarian</label>
+	</div>
+	<div id="bubble_chart"></div>
+	<script type="text/javascript" src="static/js/bubble.js"></script>
+      </div>
+      <div id="barchart_placeholder">
+	<div class="visualization_2set" id="barchart_container">
+	  <div class="visualization_header">
+	    <h3 class="visualization_title"><a href="#" id="bars_expand">Donations over Time</a></h3>
+	    <input type="checkbox" class="barchart_checkbox" id="barchart_checkbox_republican">
+	    <label for="barchart_checkbox_republican">Republican</label>
+	    <input type="checkbox" class="barchart_checkbox" id="barchart_checkbox_democrat">
+	    <label for="barchart_checkbox_democrat">Democrat</label>
+	    <input type="checkbox" class="barchart_checkbox" id="barchart_checkbox_libertarian">
+	    <label for="barchart_checkbox_libertarian">Libertarian</label>
+	    <a href="#" id="bars_stack">[ + ]</a>
+	    <hr style="margin-top:10px; margin-bottom:10px;">
+	    <div class="hover_values" id="barchart_hover_value">$0</div>	
+	    <div class="hover_explanations" id="barchart_hover_text">Hover for Details</div>
+	  </div>
+	  <div style="height:30px;"></div>
+	  <div id="barchart"></div>
+	  <script type="text/javascript" src="static/js/bars.js"></script>
+	</div>
+      </div>
+
+      <div style="clear:both; height:15px;"></div>
+      <div class="visualization_2set">
+	<div class="visualization_header">
+	  <h3 class="visualization_title">Individual Donation Amounts*</h3>
+	  <a href="#" id="toggle_boxwhisker_outliers">Toggle Outliers</a>
+	  <div class="visualization_explanation">Data is a randomly selected (with replacement) subset (size: 1/10th of original data).</div>
+	</div>
+	<div id="boxwhisker"></div>
+	<script type="text/javascript" src="static/js/boxwhisker.js"></script>
+      </div>
+      <div class="visualization_2set">
+	<div class="visualization_header">
+	  <h3 class="visualization_title">Overall Donations Per Party</h3>
+	</div>
+	<div id="sunburst"></div>
+	<script type="text/javascript" src="static/js/sunburst.js"></script>
+      </div>
+
+
+      <div style="clear:both;"></div>
+      <div class="visualization_1set">
+	<div class="visualization_header">
+	  <h3 class="visualization_title">Candidate Donations</h3>
+	  <div class="visualization_explanation">Shaded regions represent the average donation value for Libertarian, Republican and Democratic candidates, respectively.  The black marker is the average donation for a Republican candidate.  The second black marker for Barack Obama is his total donation amount divided by the number of Republican candidates.</div>
+	</div>
+	<div id="bullet"></div>
+	<script type="text/javascript" src="static/js/bullet.js"></script>
+      </div>
+
+
+      <div id="footer">Allen Chen</div>
+
+    </div>
+    
+  </body>

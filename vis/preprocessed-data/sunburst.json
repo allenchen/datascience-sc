@@ -1,0 +1,26 @@
+{
+ "name": "graph", "children": 
+ 	 [
+	 {"name": "Republican", "children": 
+	   	  [
+		   {"name": "Bachmann, Michelle", "size": 2607916}, 
+		   {"name": "Cain, Herman", "size": 7010445}, 
+		   {"name": "Gingrich, Newt", "size": 6311193}, 
+		   {"name": "Huntsman, Jon", "size": 2955726}, 
+		   {"name": "McCotter, Thaddeus G", "size": 37030}, 
+		   {"name": "Paul, Ron", "size": 11844361}, 
+		   {"name": "Pawlenty, Timothy", "size": 4202769}, 
+		   {"name": "Perry, Rick", "size": 18529490}, 
+		   {"name": "Roemer, Charles E. 'Buddy' III", "size": 291218},
+		   {"name": "Romney, Mitt", "size": 50372334}, 
+		   {"name": "Santorum, Rick", "size": 1413552}
+	]}, 
+	{"name": "Democrat", "children": 
+		 [
+		  {"name": "Obama, Barack", "size": 72453620}
+	]}, 
+	{"name": "Libertarian", "children": 
+		 [
+		  {"name": "Johnson, Gary Earl", "size": 413276}
+	]}
+]}
