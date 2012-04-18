@@ -8,24 +8,17 @@ require './util'
 
 class Scraper
 
-  Map    = Struct.new(:id, :name)
-  League = Struct.new(:id, :name)
-  Player = Struct.new(:id, :name)
-  #Result = Struct.new(:date, :league, :map, :winner, :loser)
-
-  class Result
-    attr_accessor :date, :league, :map, :winner, :loser
-
-    def initialize(date, league, map, winner, loser)
-      @date, @league, @map, @winner, @loser = [date, league, map, winner, loser]
-    end
-
-    def to_a
-      [@date, [@league, @map, @winner, @loser].collect {|x| [x.id, x.name]}].flatten
-    end
-  end
-
   attr_accessor :page, :results
+
+  Header = [ :date,
+             :league_id, :league_name,
+             :map_id, :map_name,
+             :winner_id, :winner_name, :winner_race,
+             :loser_id, :loser_name, :loser_race
+           ]
+  module Formats
+    Date = '%Y-%m-%d'
+  end
 
   # @param [Hash] options
   # @param options [String] :section default "sc2-international"
@@ -42,6 +35,9 @@ class Scraper
     @page = nil
     @results_log_name = "results_#{Time.now.to_i}.csv"
 
+    @results_folder = File.join('results', @options[:section])
+    FileUtils.mkdir_p(@results_folder)
+
     # Maps from ID to object
     @maps = {}
     @leagues = {}
@@ -57,6 +53,7 @@ class Scraper
     page_num = @options[:page]
     Log.info "Starting on page #{page_num}" if page_num
 
+    dump_header
     while next_page!(page_num)
       page_num = nil
       dump_results
@@ -66,15 +63,27 @@ class Scraper
 
   private
 
+  # @param result [Hash]
+  def format_result(result)
+    Header.collect do |field|
+      result[field]
+    end
+  end
+
+  def dump_header
+    path = File.join(@results_folder, 'header.csv')
+    CSV.open(path, 'wt') do |csv|
+      csv << Header
+    end
+  end
+
   def dump_results
     Log.debug "Taking a dump..."
-    folder = File.join('results', @options[:section])
-    FileUtils.mkdir_p(folder)
-    path = File.join(folder, @results_log_name)
+    path = File.join(@results_folder, @results_log_name)
 
     CSV.open(path, 'at') do |csv|
       @results.each do |result|
-        csv << result.to_a
+        csv << format_result(result)
       end
     end
     @results.clear
@@ -120,18 +129,40 @@ class Scraper
       end
     end
 
-    Log.debug "Parsed dates from #{@results.collect(&:date).min} to #{@results.collect(&:date).max}"
+    begin # logging
+      dates = @results.collect {|r| r[:date]}
+      Log.debug "Parsed dates from #{dates.min} to #{dates.max}"
+    end
 
     return true
   end
 
   def parse_row(tr)
+    result = {}
+
     date, league, map, winner, loser = tr.css('td')[1..5]
-    begin # date
-      yy, mm, dd = date.text().split('-').collect(&:to_i).collect {|x| x<=0 ? 1 : x}
+
+    result[:date] = begin
+      yy, mm, dd = date.text().split('-').collect(&:to_i) #.collect {|x| x<=0 ? 1 : x}
       yy += 2000
 
-      date = Time.new(yy, mm, dd)
+      Log.warn "Zero in date: #{[yy,mm,dd].join('-')}. Changing to 1." if mm <= 0 or dd <= 0
+      mm = 1 if mm <= 0
+      dd = 1 if dd <= 0
+
+      date = Time.new(yy, mm, dd).strftime(Formats::Date)
+    end
+
+    { :winner_race => winner, :loser_race => loser }.each_pair do |label, td|
+      result[label] = begin
+        img = td.at_css('img')
+        if img
+          img['title']
+        else
+          log.warn "Unknown race for #{label}"
+          'UNKNOWN'
+        end
+      end
     end
 
     league, map, winner, loser = [league, map, winner, loser].collect do |td|
@@ -144,16 +175,17 @@ class Scraper
     end
 
     league, map, winner, loser = [
-      [ league, League ],
-      [ map, Map ],
-      [ winner, Player ],
-      [ loser, Player ]
-    ].collect do |text, klass|
+      [ league, :league ],
+      [ map, :map ],
+      [ winner, :winner ],
+      [ loser, :loser ]
+    ].collect do |text, label|
       id, name = text.scan(/(\d+)_(.*)/).flatten.collect {|s| URI.unescape(s)}
-      klass.new(id, name)
+      result[ "#{label}_id".to_sym ]   = id
+      result[ "#{label}_name".to_sym ] = name
     end
 
-    Result.new(date, league, map, winner, loser)
+    result
   end
 
   def page_url(opts={})
