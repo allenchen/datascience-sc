@@ -21,15 +21,20 @@ class Scraper
   end
 
   # @param [Hash] options
-  # @param options [String] :section default "sc2-international"
-  # @param options [Integer] :page Start page, default 1
-  # @param options [Float] :delay Inter-request delay (throttling)
-  # @param options [String] :file Scrape this file instead of web
+  # @param options [String]  :section    default "sc2-international"
+  # @param options [Integer] :start_page Start page, default 1
+  # @param options [Integer] :end_page   End page, default nil
+  # @param options [Float]   :delay      Inter-request delay (throttling)
+  # @param options [String]  :file       Scrape this file instead of web
+  # @param options [Boolean] :browse     Open browser instead of scraping
+  #
   def initialize(options={}) #section="sc2-international")
     @options = {
-      :section => "sc2-international",
-      :page    => nil,
-      :delay   => 5
+      :section    => "sc2-international",
+      :start_page => nil,
+      :end_page   => nil,
+      :delay      => 5,
+      :browse     => false
     }.merge(options)
 
     @page = nil
@@ -50,8 +55,15 @@ class Scraper
   end
 
   def scrape!
-    page_num = @options[:page]
+    page_num = @options[:start_page]
     Log.info "Starting on page #{page_num}" if page_num
+
+    if @options[:browse]
+      url = page_url(:page => page_num)
+      puts url
+      `google-chrome "#{url}"`
+      return
+    end
 
     dump_header
     while next_page!(page_num)
@@ -112,7 +124,12 @@ class Scraper
       end
 
       page_number = @page.search('input[name=tabulator_page]').first['value'].to_i
-      Log.info "Scraping page #{page_number}"
+      if @options[:end_page] and page_number > @options[:end_page].to_i
+        Log.info "Requested to stop at page #{@options[:end_page]}, so stopping."
+        return
+      else
+        Log.info "Scraping page #{page_number}"
+      end
 
       rows = @page.search('#tblt_table tr')[1..-1]  # exclude header
       rows.each do |row|

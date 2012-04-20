@@ -16,6 +16,7 @@ class MultiIO
   end
 end
 
+FileUtils.mkdir_p('log')
 LogFile = File.open(File.join('log', "log_#{Time.now.to_i}.log"), "a")
 Log = Logger.new(MultiIO.new(STDOUT, LogFile))
 
