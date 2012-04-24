@@ -2,8 +2,8 @@ require './scraper'
 
 class MapScraper < Scraper
 
-  Header = [ :id, :name,
-             :size, :spots
+  Header = [ :map_id, :map_name,
+             :map_size, :map_spots
            ]
 
   BasePageUrl = 'http://www.teamliquid.net/tlpd/sc2-international/maps/'
@@ -13,7 +13,7 @@ class MapScraper < Scraper
     result = {}
 
     map_link = tr.css('td')[1].at('a')
-    result[:id] = File.basename(map_link['href']).to_i
+    result[:map_id] = File.basename(map_link['href']).to_i
     @mech.transact do
       @mech.click map_link
       Log.info "Scraping #{@mech.page.title}"
@@ -22,17 +22,17 @@ class MapScraper < Scraper
       text = text[3..-1]
       text.drop_while {|s| s.empty?}
 
-      result[:name]  = text[0]
+      result[:map_name]  = text[0]
 
-      if result[:name] =~ /Unknown/
-        result[:name] = 'Unknown'
-        result[:size], result[:spots] = nil, nil
+      if result[:map_name] =~ /Unknown/
+        result[:map_name] = 'Unknown'
+        result[:map_size], result[:map_spots] = nil, nil
       else
         text = text.slice_before {|s| s =~ /Size/}.to_a.last
-        result[:size] = text[1].scan(/(\d+x\d+)/).flatten.first
+        result[:map_size] = text[1].scan(/(\d+x\d+)/).flatten.first
 
         text = text.slice_before {|s| s =~ /Spots/}.to_a.last
-        result[:spots] = text[1].scan(/(\d+)/).flatten.join(',')
+        result[:map_spots] = text[1].scan(/(\d+)/).flatten.join(',')
       end
 
       Log.debug result.inspect
