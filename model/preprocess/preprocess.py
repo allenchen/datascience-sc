@@ -126,8 +126,8 @@ def process_data():
     data[player_id]['data']    = np.array(data[player_id]['data'])
     data[player_id]['targets'] = np.array(data[player_id]['targets']).astype(np.int)
 
-  print data.iteritems().next()
-  print [type(x) for i, x in data.iteritems().next()]
+#  print data.iteritems().next()
+#  print [type(x) for i, x in data.iteritems().next()]
 
   return data
 
