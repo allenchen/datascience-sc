@@ -1,0 +1,56 @@
+\documentclass[11pt]{handout}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage[parfill]{parskip}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\tikzset{node distance=5cm}
+\tikzstyle{block} = [rectangle, draw,%
+  text width=5em, text centered, rounded corners, minimum height=5em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse, text centered, minimum height=2em, text
+  width=4em]
+\tikzstyle{process} = [draw, rectangle, minimum height=3cm, text width = 6cm,
+  dashed]
+
+\lstset{basicstyle=\footnotesize\ttfamily,language=Python,escapeinside=\$\$,
+  showstringspaces=false}
+
+\author{
+  Allen Chen, \emph{allenchen@berkeley.edu}\\
+  Jon Ko, \emph{jonathan.ko@berkeley.edu}\\
+  Young Kim, \emph{y.kim@berkeley.edu}\\
+}
+\course{Computer Science 194-16}
+\semester{Spring 2012}
+
+\runningtitle{SICP}
+\title{Starcraft 2 International Competition Predictor}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+What's the biggest e-sport in the world? Ask anyone, and there's only one answer: Starcraft 2. Compared to other video games, Starcraft 2 undisputedly holds the title of the most popular and funded competitive scene. But, with all these big names like MVP or MMA going around, this brings up the question: who is the best? Better yet, can we figure out what factors are indicators on who would win a match? As avid fans of Starcraft 2, these are questions we aim to answer in this project in the hopes that not only will we discover who is the undisputed king but also how to improve our own game.
+
+\section{Data Scraping}
+TO-DO: Jon fill this in
+\input{data_scraping.tex}
+
+\section{Data Visualization}
+TO-DO: Allen fill this in
+\input{data_visualization.tex}
+
+\section{Data Transformation}
+TO-DO: Jon fill this in
+\input{data_transformation.tex}
+
+\section{Model Training}
+TO-DO: Young fill this in
+\input{model_training.tex}
+
+\section{Conclusion}
+
+\end{document}
