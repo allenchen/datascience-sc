@@ -10,7 +10,7 @@ Usage:
       player_id [int]: {
         data: [ [race, opponent_race,
                  win_rate, opp_win_rate,
-                 map_size, nStartPos,
+                 map_size_x, map_size_y, nStartPos,
                  time
                 ],
                 ...
@@ -33,6 +33,12 @@ HEADER_PATH = '../scraper/results/sc2-international/header.csv'
 RESULTS_PATH = '../scraper/results/sc2-international/results_p200_p1323.csv'
 MAPS_HEADER_PATH = '../scraper/results/maps/header.csv'
 MAPS_RESULTS_PATH = '../scraper/results/maps/results_maps.csv'
+
+RACE_MAP = {
+  'Protoss': 0,
+  'Terran' : 1,
+  'Zerg'   : 2
+}
 
 def load_data(result_paths=[], header_path=None, verbose=True):
   header = (pandas.read_csv(header_path) if header_path else None)
@@ -66,7 +72,14 @@ def win_rate(df, player_id, opp_race, map_id):
     d = d[d[race_col] == opp_race]
     outcomes.extend( len(d) * [outcome] )
 
-  r = np.average(outcomes)
+  if len(outcomes) == 0:
+    return 0.5
+  else:
+    r = np.average(outcomes)
+
+  if math.isnan(r):
+    print "failed outcomes:", outcomes
+    raise "WAT"
 
   return r
 
@@ -84,13 +97,18 @@ def process_data():
 
   for (i_row, row) in df.iterrows():
     map_id, map_size, n_start_pos = [row[k] for k in ('map_id', 'map_size', 'map_spots')]
+
+    map_size_x, map_size_y = (map_size.split('x') if type(map_size) == str else (0, 0))
+
     if not (type(n_start_pos) == float and math.isnan(n_start_pos)):
       n_start_pos = len(n_start_pos.split(","))
     time = row['time']
+
     for win_status, my_str, opp_str in ( (1, 'winner', 'loser'), (0, 'loser', 'winner') ):
       my_id,  my_race  = [row["%s_%s" % (my_str, k)]  for k in ('id', 'race')]
       opp_id, opp_race = [row["%s_%s" % (opp_str, k)] for k in ('id', 'race')]
 
+      my_race, opp_race = RACE_MAP[my_race], RACE_MAP[opp_race]
       my_id, opp_id = int(my_id), int(opp_id)
 
       if my_id not in data:
@@ -98,12 +116,18 @@ def process_data():
 
       my_win_rate, opp_win_rate = win_rate(df, my_id, opp_race, map_id), win_rate(df, opp_id, my_race, map_id)
 
-      features = np.array([my_race, opp_race, my_win_rate, opp_win_rate, map_size, n_start_pos, time])
+      features = np.array([my_race, opp_race, my_win_rate, opp_win_rate, map_size_x, map_size_y, n_start_pos, time]).astype(np.float)
+
       data[my_id]['data'].append(features)
       data[my_id]['targets'].append(win_status)
       #print my_id, ':', data[my_id]
 
-  print data.itervalues().next()
+  for player_id in data.iterkeys():
+    data[player_id]['data']    = np.array(data[player_id]['data'])
+    data[player_id]['targets'] = np.array(data[player_id]['targets']).astype(np.int)
+
+  print data.iteritems().next()
+  print [type(x) for i, x in data.iteritems().next()]
 
   return data
 
