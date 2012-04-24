@@ -6,19 +6,35 @@ require 'addressable/uri'
 require 'csv'
 require './util'
 
+module Scrapeable
+  # Paths
+  Folder   = proc {|s| File.join('results', s.options[:section]) }
+  Filename = "results_#{Time.now.to_i}.csv"
+
+  # Header fields
+  Header = proc { raise NotImplementedError }
+
+  # Configuration variables
+  UserAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.142 Safari/535.19'
+
+  # Page URL without query params
+  BasePageUrl = proc { raise NotImplementedError } # 'http://www.teamliquid.net/tlpd/games/index.php'
+
+  # Default query params, if any
+  DefaultPageUrlOpts = proc { {} }
+
+  # Pluggable hooks, run before or after some action
+  # Should all be +lambda+s.
+
+  # Run after scraping all pages
+  PostScrape = nil
+end
+
 class Scraper
 
-  attr_accessor :page, :results
+  attr_accessor :page, :results, :options
 
-  Header = [ :date,
-             :league_id, :league_name,
-             :map_id, :map_name,
-             :winner_id, :winner_name, :winner_race,
-             :loser_id, :loser_name, :loser_race
-           ]
-  module Formats
-    Date = '%Y-%m-%d'
-  end
+  include Scrapeable
 
   # @param [Hash] options
   # @param options [String]  :section    default "sc2-international"
@@ -38,10 +54,6 @@ class Scraper
     }.merge(options)
 
     @page = nil
-    @results_log_name = "results_#{Time.now.to_i}.csv"
-
-    @results_folder = File.join('results', @options[:section])
-    FileUtils.mkdir_p(@results_folder)
 
     # Maps from ID to object
     @maps = {}
@@ -50,7 +62,7 @@ class Scraper
 
     @results = []
     @mech = Mechanize.new do |agent|
-      agent.user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.142 Safari/535.19'
+      agent.user_agent = get_config_value(self.class::UserAgent)
     end
   end
 
@@ -75,25 +87,32 @@ class Scraper
 
   private
 
+  # Creates log folder and returns path (@see {Paths::Filename}, {Paths::Folder})
+  def results_log_path
+    results_log_name = get_config_value(self.class::Filename)
+    results_folder   = get_config_value(self.class::Folder)
+    FileUtils.mkdir_p(results_folder)
+    File.join(results_folder, results_log_name)
+  end
+
   # @param result [Hash]
   def format_result(result)
-    Header.collect do |field|
+    get_config_value(self.class::Header).collect do |field|
       result[field]
     end
   end
 
   def dump_header
-    path = File.join(@results_folder, 'header.csv')
+    path = File.join(File.dirname(results_log_path), 'header.csv')
     CSV.open(path, 'wt') do |csv|
-      csv << Header
+      csv << get_config_value(self.class::Header)
     end
   end
 
   def dump_results
     Log.debug "Taking a dump..."
-    path = File.join(@results_folder, @results_log_name)
 
-    CSV.open(path, 'at') do |csv|
+    CSV.open(results_log_path, 'at') do |csv|
       @results.each do |result|
         csv << format_result(result)
       end
@@ -146,81 +165,37 @@ class Scraper
       end
     end
 
-    begin # logging
-      dates = @results.collect {|r| r[:date]}
-      Log.debug "Parsed dates from #{dates.min} to #{dates.max}"
+    if hook = self.class::PostScrape
+      get_config_value(self.class::PostScrape)
     end
 
     return true
   end
 
+  # Converts a +tr+ to a +Hash+ for collection into {results}.
+  # Exact format of the return value is unspecified, but will should be
+  # understandable by {format_result}.
+  #
+  # @param tr [Nokogiri::Node] scraped table row
+  # @return [Hash] representing this row
+  #
   def parse_row(tr)
-    result = {}
-
-    date, league, map, winner, loser = tr.css('td')[1..5]
-
-    result[:date] = begin
-      yy, mm, dd = date.text().split('-').collect(&:to_i) #.collect {|x| x<=0 ? 1 : x}
-      yy += 2000
-
-      Log.warn "Zero in date: #{[yy,mm,dd].join('-')}. Changing to 1." if mm <= 0 or dd <= 0
-      mm = 1 if mm <= 0
-      dd = 1 if dd <= 0
-
-      date = Time.new(yy, mm, dd).strftime(Formats::Date)
-    end
-
-    { :winner_race => winner, :loser_race => loser }.each_pair do |label, td|
-      result[label] = begin
-        img = td.at_css('img')
-        if img
-          img['title']
-        else
-          log.warn "Unknown race for #{label}"
-          'UNKNOWN'
-        end
-      end
-    end
-
-    league, map, winner, loser = [league, map, winner, loser].collect do |td|
-      id_name = if a = td.at_css('a')
-        a['href']
-      else
-        '0_UNKNOWN'
-      end
-      File.basename(id_name)
-    end
-
-    league, map, winner, loser = [
-      [ league, :league ],
-      [ map, :map ],
-      [ winner, :winner ],
-      [ loser, :loser ]
-    ].collect do |text, label|
-      id, name = text.scan(/(\d+)_(.*)/).flatten.collect {|s| URI.unescape(s)}
-      result[ "#{label}_id".to_sym ]   = id
-      result[ "#{label}_name".to_sym ] = name
-    end
-
-    result
+    raise NotImplementedError, "Scraper::parse_row"
   end
 
   def page_url(opts={})
-    #return "http://www.teamliquid.net/tlpd/sc2-international/games"
-
-    base_url = "http://www.teamliquid.net/tlpd/games/index.php"
+    base_url = get_config_value(self.class::BasePageUrl)
 
     opts = {
       :page => 1
-    }.merge(opts)
+    }.merge(get_config_value(self.class::DefaultPageUrlOpts)).merge(opts)
 
     query = {
-      'section'              => @options[:section],
-      'tabulator_page'       => opts[:page],
+      'tabulator_page'       => opts.delete(:page),
       'tabulator_order_col'  => 1,
       'tabulator_order_desc' => 1,
 #      'tabulator_search'     => "#tblt-3922-#{opts[:page]}-1-DESC"
-    }
+    }.merge(opts.convert_keys)
 
     uri = Addressable::URI.parse(base_url)
     uri.query_values = query
@@ -228,6 +203,19 @@ class Scraper
     uri = uri.to_s.gsub('%23', '#')  # wtf
 
     return uri
+  end
+
+  # Gets a configuration value. If +obj+ is a +Proc+, it's called with +self+,
+  # else the value is just +obj+ itself.
+  # @param obj [Object] something to get the value of
+  # @return [Object]
+  def get_config_value(obj)
+    case obj
+    when Proc
+      obj.call(self)
+    else
+      obj
+    end
   end
 
 end

@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require './scraper'
+require './match_scraper'
 require 'optparse'
 
 def main
@@ -26,7 +26,7 @@ def main
   end.parse!
 
   options[:section] = ARGV.first if ARGV.any?
-  s = Scraper.new(options)
+  s = MatchScraper.new(options)
   s.scrape!
 
 end
