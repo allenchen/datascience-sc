@@ -11,10 +11,8 @@ body {
 //  @include background-image(linear-gradient(left, rgba(30,37,40,1) 0%,rgba(128,180,181,1) 50%,rgba(30,37,40,1) 100%));
 
   width: 100%;
-  background-image: url(http://bestgamewallpapers.com/files/starcraft-2/kerrigan.jpg);
+  background-image: url(bg.jpg);
   background-repeat: no-repeat;
-//  padding-top:    7.5%;
-//  padding-bottom: 7.5%;
   @include background-size(100% 100%);
   @include background-origin(border-box);
 }
