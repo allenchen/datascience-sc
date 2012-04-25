@@ -3,14 +3,14 @@ import pylab as pl
 from scipy import interp
 
 from sklearn.metrics import roc_curve, auc
-from sklearn.cross_validation import StratifiedKFold
+from sklearn.cross_validation import KFold
 
 def cross_validate(data, model, folds):
     results = []
     features = data['data']
     targets = data['targets']
 
-    cv = StratifiedKFold(targets, k=folds)
+    cv = KFold(len(targets), k=folds)
     for i, (train, test) in enumerate(cv):
         probs = model.fit(features[train], targets[train]).predict_proba(features[test])
         fpr, tpr, thresholds = roc_curve(targets[test], probs[:, 1])
