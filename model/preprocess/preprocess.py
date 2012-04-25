@@ -10,7 +10,7 @@ Usage:
       player_id [int]: {
         data: [ [race, opponent_race,
                  win_rate, opp_win_rate,
-                 map_size_x, map_size_y, nStartPos,
+#                 map_size_x, map_size_y, nStartPos,
                  time
                 ],
                 ...
@@ -56,7 +56,7 @@ def load_data(result_paths=[], header_path=None, verbose=True):
     df['date'] = [dateutil.parser.parse(date) for date in df['date']]
 
     # time = e^(-(date-earliest))
-    earliest = df['date'].min().toordinal()
+    earliest = df['date'].min().toordinal() + 0.1   # offset to not get zeros
     df['time'] = np.exp([earliest-d.toordinal() for d in df['date']])
 
   return df
@@ -120,13 +120,13 @@ def process_data():
   for (i_row, row) in df.iterrows():
     map_id, map_size, n_start_pos = [row[k] for k in ('map_id', 'map_size', 'map_spots')]
 
-    if isnan(map_size):
-      map_size_x, map_size_y = avg_map_size(df)
-    else:
-      map_size_x, map_size_y = (map_size.split('x') if type(map_size) == str else (0, 0))
+#    if isnan(map_size):
+#      map_size_x, map_size_y = avg_map_size(df)
+#    else:
+#      map_size_x, map_size_y = (map_size.split('x') if type(map_size) == str else (0, 0))
 
-    if not isnan(n_start_pos):
-      n_start_pos = len(n_start_pos.split(","))
+#    if not isnan(n_start_pos):
+#      n_start_pos = len(n_start_pos.split(","))
     time = row['time']
 
     for win_status, my_str, opp_str in ( (1, 'winner', 'loser'), (0, 'loser', 'winner') ):
@@ -141,7 +141,9 @@ def process_data():
 
       my_win_rate, opp_win_rate = win_rate(df, my_id, opp_race, map_id), win_rate(df, opp_id, my_race, map_id)
 
-      features = np.array([my_race, opp_race, my_win_rate, opp_win_rate, map_size_x, map_size_y, n_start_pos, time]).astype(np.float)
+      features = np.array([my_race, opp_race, my_win_rate, opp_win_rate,
+        #map_size_x, map_size_y, n_start_pos,
+        time]).astype(np.float)
 
       data[my_id]['data'].append(features)
       data[my_id]['targets'].append(win_status)
