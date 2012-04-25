@@ -23,7 +23,7 @@ def evaluate_dtree(player_data):
     validate.draw_roc_curves(results)
 
 def evaluate_svm(player_data):
-    player_model = SVC()
+    player_model = SVC(probability=True)
     results = validate.cross_validate(player_data, player_model, 10)
     validate.draw_roc_curves(results)
 
