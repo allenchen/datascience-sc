@@ -29,10 +29,10 @@ import dateutil.parser
 from memoize import memoize
 
 
-HEADER_PATH       = '../../scraper/results/sc2-international/header.csv'
-RESULTS_PATH      = '../../scraper/results/sc2-international/results_p200_p1323.csv'
-MAPS_HEADER_PATH  = '../../scraper/results/maps/header.csv'
-MAPS_RESULTS_PATH = '../../scraper/results/maps/results_maps.csv'
+HEADER_PATH       = 'data/players/header.csv'
+RESULTS_PATH      = 'data/players/players.csv'
+MAPS_HEADER_PATH  = 'data/maps/header.csv'
+MAPS_RESULTS_PATH = 'data/maps/maps.csv'
 
 RACE_MAP = {
   'Protoss': 0,
@@ -92,7 +92,9 @@ def process_data():
   map_df = load_data([MAPS_RESULTS_PATH], header_path=MAPS_HEADER_PATH)
   df = pandas.merge(results_df, map_df, on='map_id', how='left')
 
-  df = df[ [x if type(x) == bool else False for x in df['map_name.y'] != 'Unknown'] ]
+  # Filter out based on map numbers that are unknown
+  df = df[df['map_id'] != 0]
+  df = df[df['map_id'] != 222]
 
   print df
   print df.head()
