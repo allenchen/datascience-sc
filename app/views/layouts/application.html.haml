@@ -6,14 +6,22 @@
     = javascript_include_tag 'application'
     = csrf_meta_tags
 
-  %body.clearfix
+  %body.cf
     %header
       %a.nav.home.left(href=home_path)
         %span home
-      %a.nav.tech.left(href='#')
+      %a.nav.tech.left(href=tech_path)
         %span tech
       %a.nav.github.right(href="https://github.com/jonathank/datascience-sc")
         %span source
     #content
       = yield
     %footer
+      %a.nav.left(href='http://datascienc.es/')
+        %span cs194-16
+      .nav.right
+        %span allen chen
+      .nav.right
+        %span jon ko
+      .nav.right
+        %span young kim

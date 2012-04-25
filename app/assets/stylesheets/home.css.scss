@@ -25,9 +25,8 @@ body {
   @include box-sizing(border-box);
 }
 
-header {
+header, footer {
   position: absolute;
-  top: 0;
   height: 14%;
   width: 100%;
 
@@ -51,6 +50,12 @@ header {
   }
 }
 
+header { top: 0; }
+footer {
+  bottom: 0;
+  height: 10%;
+}
+
 h1, h2, h3, h4, h5, h6 {
   color: $base2;
   font-family: $fancy-font, cursive;
@@ -63,6 +68,23 @@ h2 { font-size: 2em; }
 p {
   margin: 1em;
   padding: 1em;
+}
+
+code {
+  padding: 0.1em;
+  font-family: $monospace-font;
+  position: relative;
+
+  &:hover {
+    &:before, &:after {
+      position: absolute;
+      height: 120%;
+      font-size: 1.5em;
+      color: $base2;
+    }
+    &:before { content: "{"; left: -0.3em; }
+    &:after  { content: "}"; right: -0.3em; }
+  }
 }
 
 #content {
@@ -81,4 +103,10 @@ p {
   margin: 1.5em;
   text-align: center;
   font-size: 1.5em;
+}
+
+.section {
+  h2, h3, h4, h5, h6 {
+    text-align: left;
+  }
 }

@@ -14,7 +14,7 @@ $base5: #FFFFFF;
 @import url(http://fonts.googleapis.com/css?family=Doppio+One);
 $fancy-font: "Iceland";
 $base-font: "Doppio One", sans-serif;
-
+$monospace-font: "Consolas", monospace;
 $base-font-color: $base5;
 
 .center { text-align: center; }
@@ -31,4 +31,20 @@ $base-font-color: $base5;
   font-family: $base-font;
   color: $base-font-color;
   text-decoration: none;
+}
+
+/* http://nicolasgallagher.com/micro-clearfix-hack/ */
+.cf:before,
+.cf:after {
+    content:"";
+    display:table;
+}
+
+.cf:after {
+    clear:both;
+}
+
+/* For IE 6/7 (trigger hasLayout) */
+.cf {
+    zoom:1;
 }

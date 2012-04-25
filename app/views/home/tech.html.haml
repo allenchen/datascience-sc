@@ -1,0 +1,16 @@
+%h1 Technical Details
+
+.section
+  %h2 Data Collection
+  %p
+    We obtain our dataset by scraping the game results listings from #{link_to 'teamliquid', 'http://www.teamliquid.net/tlpd/sc2-international/games'}. A script is provided in
+    %code scraper/main.rb
+    that parses the listings pages and outputs to csv.
+
+  %p
+    Data collection is very time-consuming due to the fact that the teamliquid site throttles requests; too many requests in a short time will result in a temporary (~1 minute) IP ban. To fix this we introduce an inter-request delay of 5 seconds.
+
+  %p
+    We scrape match result data from two sections, sc2-international and sc2-korean, and also scrape map data.
+    %br/
+    %code TODO: header field examples
