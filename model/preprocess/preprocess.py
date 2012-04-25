@@ -40,6 +40,9 @@ RACE_MAP = {
   'Zerg'   : 2
 }
 
+def isnan(x):
+  return type(x) == float and math.isnan(x)
+
 def load_data(result_paths=[], header_path=None, verbose=True):
   header = (pandas.read_csv(header_path) if header_path else None)
 
@@ -57,6 +60,19 @@ def load_data(result_paths=[], header_path=None, verbose=True):
     df['time'] = np.exp([earliest-d.toordinal() for d in df['date']])
 
   return df
+
+global __avg_map_size
+__avg_map_size = None
+def avg_map_size(df):
+  global __avg_map_size
+  if __avg_map_size is not None:
+    return __avg_map_size
+
+  dims = [ map_size.split('x') for map_size in df['map_size'] if not isnan(map_size) ]
+  avg_size = (np.average([int(x) for x,y in dims]), np.average([int(y) for x,y in dims]))
+  print "Avg size =", avg_size
+  __avg_map_size = avg_size
+  return avg_size
 
 @memoize
 def win_rate(df, player_id, opp_race, map_id):
@@ -90,7 +106,7 @@ def process_data():
   """
   results_df = load_data([RESULTS_PATH], header_path=HEADER_PATH)
   map_df = load_data([MAPS_RESULTS_PATH], header_path=MAPS_HEADER_PATH)
-  df = pandas.merge(results_df, map_df, on='map_id', how='left')
+  df = pandas.merge(results_df, map_df, on='map_id', how='inner')
 
   # Filter out based on map numbers that are unknown
   df = df[df['map_id'] != 0]
@@ -104,9 +120,12 @@ def process_data():
   for (i_row, row) in df.iterrows():
     map_id, map_size, n_start_pos = [row[k] for k in ('map_id', 'map_size', 'map_spots')]
 
-    map_size_x, map_size_y = (map_size.split('x') if type(map_size) == str else (0, 0))
+    if isnan(map_size):
+      map_size_x, map_size_y = avg_map_size(df)
+    else:
+      map_size_x, map_size_y = (map_size.split('x') if type(map_size) == str else (0, 0))
 
-    if not (type(n_start_pos) == float and math.isnan(n_start_pos)):
+    if not isnan(n_start_pos):
       n_start_pos = len(n_start_pos.split(","))
     time = row['time']
 
