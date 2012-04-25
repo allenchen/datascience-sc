@@ -1,0 +1,18 @@
+// http://kuler.adobe.com/#themeID/1859505
+$base1: #3D4C53;
+$base2: #70B7BA;
+$base3: #F1433F;
+$base4: #E7E1D4;
+$base5: #FFFFFF;
+
+@import 'compass';
+@import 'compass/css3';
+@import 'compass/reset';
+@include global-reset();
+
+@import url(http://fonts.googleapis.com/css?family=Iceland);
+@import url(http://fonts.googleapis.com/css?family=Doppio+One);
+$fancy-font: "Iceland";
+$base-font: "Doppio One";
+
+$base-font-color: $base5;
