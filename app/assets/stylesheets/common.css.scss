@@ -18,4 +18,17 @@ $base-font: "Doppio One", sans-serif;
 $base-font-color: $base5;
 
 .center { text-align: center; }
+.left { float: left; }
+.right { float: right; }
 .fancy-font { font-family: $fancy-font; }
+@mixin box {
+  @include display-box();
+  @include box-orient(horizontal);
+  @include box-align(center);
+  @include box-pack(center);
+}
+@mixin regular-text {
+  font-family: $base-font;
+  color: $base-font-color;
+  text-decoration: none;
+}

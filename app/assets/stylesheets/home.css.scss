@@ -13,14 +13,44 @@ body {
   width: 100%;
   background-image: url(http://bestgamewallpapers.com/files/starcraft-2/kerrigan.jpg);
   background-repeat: no-repeat;
-  padding-top: 7.5%;
+//  padding-top:    7.5%;
+//  padding-bottom: 7.5%;
   @include background-size(100% 100%);
   @include background-origin(border-box);
 }
 
 body {
-  font-family: $base-font;
-  color: $base-font-color;
+  @include regular-text();
+}
+
+* {
+  @include box-sizing(border-box);
+}
+
+header {
+  position: absolute;
+  top: 0;
+  height: 14%;
+  width: 100%;
+
+  .nav {
+    @include box();
+    margin-left:  0.25em;
+    margin-right: 0.25em;
+    padding: 0.25em;
+    height: 100%;
+    width: 6em;
+
+    @include regular-text();
+    font-family: $fancy-font;
+    font-size: 1.5em;
+
+    background: rgba(255,255,255,0.1);
+
+    &:hover {
+      background: rgba(255,255,255,0.2);
+    }
+  }
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -32,16 +62,25 @@ h1, h2, h3, h4, h5, h6 {
 h1 { font-size: 3em; }
 h2 { font-size: 2em; }
 
+p {
+  margin: 1em;
+  padding: 1em;
+}
+
 #content {
   @include box-sizing(border-box);
   padding: 2em;
-  position: fixed;
+  position: absolute;
+  top: 14%;
   height: 76%;
   width: 100%;
 
   background: rgba(0,0,0,0.8);
   @include single-box-shadow( $color: $base2, $blur: 0.6em, $spread: 0.1em );
+}
 
-//  @include filter-gradient(#000000, rgba(0,0,0,0), horizontal); // IE6-9 fallback on horizontal gradient
-//  @include background-image(radial-gradient(center, ellipse cover, rgba(0,0,0,0.8) 0%,rgba(0,0,0,0.8) 90%,rgba(0,0,0,0) 100%));
+.bam {
+  margin: 1.5em;
+  text-align: center;
+  font-size: 1.5em;
 }
