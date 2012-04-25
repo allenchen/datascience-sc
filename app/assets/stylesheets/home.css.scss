@@ -2,6 +2,7 @@
 
 html {
   height: 100%;
+  width: 100%;
 }
 
 body {
@@ -9,15 +10,15 @@ body {
 //  @include filter-gradient(#1e2528, #1e2528, horizontal); // IE6-9
 //  @include background-image(linear-gradient(left, rgba(30,37,40,1) 0%,rgba(128,180,181,1) 50%,rgba(30,37,40,1) 100%));
 
-  position: relative;
-  height: 100%;
-
+  width: 100%;
   background-image: url(http://bestgamewallpapers.com/files/starcraft-2/kerrigan.jpg);
   background-repeat: no-repeat;
+  padding-top: 7.5%;
   @include background-size(100% 100%);
+  @include background-origin(border-box);
 }
 
-* {
+body {
   font-family: $base-font;
   color: $base-font-color;
 }
@@ -29,12 +30,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 { font-size: 3em; }
+h2 { font-size: 2em; }
 
 #content {
   @include box-sizing(border-box);
-  margin: 0;
-  margin-top: 8%;
-  margin-bottom: 8%;
-  height: 74%;
+  padding: 2em;
+  position: fixed;
+  height: 76%;
+  width: 100%;
+
   background: rgba(0,0,0,0.8);
+  @include single-box-shadow( $color: $base2, $blur: 0.6em, $spread: 0.1em );
+
+//  @include filter-gradient(#000000, rgba(0,0,0,0), horizontal); // IE6-9 fallback on horizontal gradient
+//  @include background-image(radial-gradient(center, ellipse cover, rgba(0,0,0,0.8) 0%,rgba(0,0,0,0.8) 90%,rgba(0,0,0,0) 100%));
 }
