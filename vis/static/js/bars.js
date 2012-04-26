@@ -1,7 +1,7 @@
 
 var bardata = [];
 var n = 3;
-var m = 143;
+var m = 70;
 var barchart_color_selector = function() {};
 
 function load_barchart(parties, total_width, total_height) {

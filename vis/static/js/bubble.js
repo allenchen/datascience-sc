@@ -22,7 +22,7 @@ var vis = d3.select("#bubble_chart").append("svg")
 
 function randomcompare() { return 0.5 - Math.random(); }
 function load_bubble(parties) {
-    d3.json("preprocessed-data/top_players.json", function(json) {
+    d3.json("preprocessed-data/top_players_2.json", function(json) {
 	$("#bubble_chart .bubble").empty();
 	var party_vis = {
 	    "Republican": {},

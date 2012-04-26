@@ -84,7 +84,7 @@ top_count = 50
 
 def scale_frequency(wins,losses):
     # use lower bound of Wilson score confidence interval for a Bernoulli parameter W/L
-    return math.exp(10+(10*confidence(wins,losses)))
+    return math.exp(10+(10*confidence(wins,losses)))/10000000000
 #math.sqrt(confidence(wins,losses))
 
 for player_name, frequency in \
