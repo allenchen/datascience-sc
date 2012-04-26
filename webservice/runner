@@ -1,3 +1,9 @@
 #!/usr/bin/env python
 
-print "{ 'wat': 'hi' }"
+import json
+import sys
+
+sys.argv.pop(0)
+results = { 'argv': sys.argv }
+
+print json.dumps(results)

@@ -10,13 +10,13 @@ app.get('/', function(req, res){
 
 app.get('/predict', function(req, res){
   p = {
-    stuff: [],
+    results: {},
   };
 
-  child = exec('./runner', function(error, stdout, stderr){
+  child = exec('./runner '+req.query.p, function(error, stdout, stderr){
     if(stderr) p.error = stderr;
     if(error) p.error = error;
-    p.stuff = stdout;
+    p.stuff = JSON.parse(stdout);
 
     res.send(p);
   });
