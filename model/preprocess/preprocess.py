@@ -70,6 +70,7 @@ import dateutil.parser
 from memoize import memoize
 from pymongo import Connection
 import os
+from multiprocessing import Pool
 
 try:
   connection = Connection(os.environ['MONGO_SERVER'])
@@ -183,55 +184,61 @@ def win_rate_race_map(df, player_id, opp_race, map_id):
   r = float(len(win_df)) / float(n_matches)
   return r
 
-def persist_data(df, replace_existing=False):
-  print "persist_data()"
-  player_ids = list(set(df['winner_id']).union(set(df['loser_id'])))
-  map_ids = set(df['map_id'])
-  RACES = ( ('t', RACE_MAP['Terran']),
-            ('p', RACE_MAP['Protoss']),
-            ('z', RACE_MAP['Zerg']) )
-
+RACES = ( ('t', RACE_MAP['Terran']),
+          ('p', RACE_MAP['Protoss']),
+          ('z', RACE_MAP['Zerg']) )
+def __persist_datum__(args):
+  i, pid, df, player_ids, map_ids, replace_existing = args
   n_pids = len(player_ids)
   d_i = n_pids // 10
 
-  for i, pid in enumerate(player_ids):
-    if i % d_i == 0:
-      print "{0}%".format(float(i)/n_pids)
+  if i % d_i == 0:
+    print "{0}%".format(float(i)/n_pids)
 
-    if not replace_existing and db.data.find_one({ 'pid': str(pid) }):
-      print "({0} / {1}): {2}".format(i, n_pids, pid)
-      continue
+  if not replace_existing and db.data.find_one({ 'pid': str(pid) }):
+    print "({0} / {1}): {2}".format(i, n_pids, pid)
+    return
 
-    datum = {
-      'pid': str(pid),
-      'opp': {},
-      'map': {},
-      'race': {}
-    }
+  datum = {
+    'pid': str(pid),
+    'opp': {},
+    'map': {},
+    'race': {}
+  }
 
-    # race
+  # race
+  for race_label, race_id in RACES:
+    datum['race']['race_label'] = win_rate_race(df, pid, race_id)
+
+  # map
+  for map_id in map_ids:
+    h = {}
     for race_label, race_id in RACES:
-      datum['race']['race_label'] = win_rate_race(df, pid, race_id)
+      h[race_label] = win_rate_race_map(df, pid, race_id, map_id)
+    h['rate'] = win_rate_map(df, pid, map_id)
+    datum['map'][str(map_id)] = h
 
-    # map
-    for map_id in map_ids:
-      h = {}
-      for race_label, race_id in RACES:
-        h[race_label] = win_rate_race_map(df, pid, race_id, map_id)
-      h['rate'] = win_rate_map(df, pid, map_id)
-      datum['map'][str(map_id)] = h
+  # opponents
+  for opp_id in player_ids:
+    if pid == opp_id: continue
+    datum['opp'][str(opp_id)] = win_rate_player(df, pid, opp_id)
 
-    # opponents
-    for opp_id in player_ids:
-      if pid == opp_id: continue
-      datum['opp'][str(opp_id)] = win_rate_player(df, pid, opp_id)
+  if replace_existing:
+    db.data.remove({ 'pid': str(pid) })
+  db.data.insert(datum)
 
-    if replace_existing:
-      db.data.remove({ 'pid': str(pid) })
-    db.data.insert(datum)
+  #print db.data.find_one({ 'pid': str(pid) })
+  print "{0} / {1}: {2}".format(i, n_pids, pid)
 
-    #print db.data.find_one({ 'pid': str(pid) })
-    print "{0} / {1}: {2}".format(i, n_pids, pid)
+def persist_data(df, replace_existing=False):
+  print "persist_data()"
+
+  player_ids = list(set(df['winner_id']).union(set(df['loser_id'])))
+  map_ids = set(df['map_id'])
+
+  pool = Pool(16)
+  pool.map(__persist_datum__, [(i, pid, df, player_ids, map_ids, replace_existing) for i, pid in enumerate(player_ids)])
+
   print ">>> persist_data() done"
 
 @memoize
