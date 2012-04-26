@@ -16,6 +16,7 @@ Usage:
                     p2_wr_on_map,
                   p1_wr_against_race2_overall,
                     p2_wr_against_race2_overall,
+                  p1_wr_against_p2_overall
                 ],
                 ...
               ],
@@ -58,7 +59,7 @@ Cached data:
 
 API:
 
-  f(map_id, p1_id, p2_id, time)
+  f(map_id, p1_id, p2_id, time) -> [feature]
     -> { data: [ [feature1], [feature2], ... ], outcomes: [ o1, o2, ... ] }
 
 """
@@ -89,6 +90,79 @@ RACE_MAP = {
   'Terran' : 1,
   'Zerg'   : 2
 }
+
+def key_for(pid):
+  return { 'pid': str(pid) }
+
+def get_record(query):
+  """
+  Args:
+    query [dict, int]
+  """
+  if type(query) in (int, str):  # pid
+    query = key_for(query)
+
+  return db.data.find_one(query)
+
+MIN_DATE = 733981
+def normalize_date(d):
+  if type(d) == str:
+    d = dateutil.parser.parse(date_str)
+  elif type(d) == datetime.datetime:
+    pass
+  else:
+    raise TypeError("argument must be str or datetime.datetime")
+
+  current = datetime.today().toordinal()
+  tscale = current-MIN_DATE
+  normalized = 1.0/(1+exp(-(((d.toordinal()-earliest)/tscale)*12 - 6)))
+  return normalized
+
+def get_feature(map_id, p1_id, p1_race, p2_id, p2_race, date):
+  """
+  Prediction for p1's performance against p2 on given map and date
+
+  Args:
+    map_id: Map on which the players compete
+    p1_id:  First player's id
+     p2_id
+    p1_race: One of ('t', 'p', 'z')
+     p2_race
+    date:   String like '2012-04-26' of match date, or a datetime.datetime
+  """
+  if p1_race not in RACES.keys() or p2_race not in RACES.keys():
+    raise ValueError("Races must be chosen from {0}".format(RACES.keys()))
+
+  map_id, p1_id, p2_id = [str(x) for x in (map_id, p1_id, p2_id)]
+  r1, r2 = get_record(p1_id), get_record(p2_id)
+
+  feature = (
+    # time
+    normalize_date(date),
+
+    # p1_wr_against_race2_on_map,
+    r1['map'][map_id][p2_race],
+
+    #   p2_wr_against_race1_on_map,
+    r2['map'][map_id][p1_race],
+
+    # p1_wr_on_map,
+    r1['map'][map_id]['rate'],
+
+    #   p2_wr_on_map,
+    r2['map'][map_id]['rate'],
+
+    # p1_wr_against_race2_overall,
+    r1['race'][p2_race],
+
+    #   p2_wr_against_race2_overall,
+    r2['race'][p1_race],
+
+    # p1_wr_against_p2_overall
+    r1['opp'][p2_id]
+  )
+
+  return feature
 
 def isnan(x):
   return type(x) == float and math.isnan(x)
@@ -208,7 +282,7 @@ def __persist_datum__(args):
 
   # race
   for race_label, race_id in RACES:
-    datum['race']['race_label'] = win_rate_race(df, pid, race_id)
+    datum['race'][race_label] = win_rate_race(df, pid, race_id)
 
   # map
   for map_id in map_ids:
