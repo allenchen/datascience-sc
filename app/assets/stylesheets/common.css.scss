@@ -10,6 +10,8 @@ $base5: #FFFFFF;
 @import 'compass/reset';
 @include global-reset();
 
+$border-radius: 0.3em;
+
 @import url(http://fonts.googleapis.com/css?family=Iceland);
 @import url(http://fonts.googleapis.com/css?family=Doppio+One);
 $fancy-font: "Iceland";

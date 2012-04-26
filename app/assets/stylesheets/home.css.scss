@@ -6,10 +6,6 @@ html {
 }
 
 body {
-//  background-color: rgb(30,37,40); // Old browsers
-//  @include filter-gradient(#1e2528, #1e2528, horizontal); // IE6-9
-//  @include background-image(linear-gradient(left, rgba(30,37,40,1) 0%,rgba(128,180,181,1) 50%,rgba(30,37,40,1) 100%));
-
   width: 100%;
   background-image: url(bg.jpg);
   background-repeat: no-repeat;
@@ -88,6 +84,27 @@ code {
   }
 }
 
+table.csv {
+  text-align: center;
+  width: 100%;
+  @include border-radius($border-radius);
+
+  th, td {
+    padding: 0.2em;
+  }
+  tr:nth-child(odd) {
+    background-color: rgba($base4, 0.2);
+  }
+  tr:nth-child(even) {
+    background-color: rgba($base1, 0.8);
+  }
+
+  th {
+    background-color: rgba($base4, 0.2);
+    color: #111;
+  }
+}
+
 #content {
   @include box-sizing(border-box);
   padding: 2em;
@@ -107,6 +124,9 @@ code {
 }
 
 .section {
+  margin-top:    2.5em;
+  margin-bottom: 2.5em;
+
   h2, h3, h4, h5, h6 {
     text-align: left;
   }

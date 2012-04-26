@@ -2,15 +2,97 @@
 
 .section
   %h2 Data Collection
-  %p
-    We obtain our dataset by scraping the game results listings from #{link_to 'teamliquid', 'http://www.teamliquid.net/tlpd/sc2-international/games'}. A script is provided in
-    %code scraper/main.rb
-    that parses the listings pages and outputs to csv.
 
   %p
-    Data collection is very time-consuming due to the fact that the teamliquid site throttles requests; too many requests in a short time will result in a temporary (~1 minute) IP ban. To fix this we introduce an inter-request delay of 5 seconds.
+    %code= link_to 'teamliquid', 'http://www.teamliquid.net/'
+    provides a useful database for player, match, and map stats and records of professional Starcraft II matches.
+    Unfortunately, they aren't available in a simple format, requiring a little bit of work on our part to massage the data.
+
+  .wat
+    %p
+      We obtain our dataset by scraping the game results listings from the
+      %code= link_to 'international', 'http://www.teamliquid.net/tlpd/sc2-international/games'
+      and
+      %code= link_to 'Korean', 'http://www.teamliquid.net/tlpd/sc2-korean/games'
+      Korean sections &ndash; the resulting dataset is about 5mb.
+      A command-line script performs this scraping, with automatic request throttling to satisfy the server's ip-banner, on-demand
+      and outputs to CSV. The format looks something like this:
+    %table.csv
+      %tr
+        %th date
+        %th league_id
+        %th league_name
+        %th map_id
+        %th map_name
+        %th winner_id
+        %th winner_name
+        %th winner_race
+        %th loser_id
+        %th loser_name
+        %th loser_race
+      %tr
+        %td 2012-04-16
+        %td 2560
+        %td EG_Masters_Cup_VII
+        %td 528
+        %td Metropolis
+        %td 222
+        %td HerO
+        %td Protoss
+        %td 1988
+        %td aLive
+        %td Terran
+      %tr
+        %td 2012-04-16
+        %td 2560
+        %td EG_Masters_Cup_VII
+        %td 528
+        %td Metropolis
+        %td 1903
+        %td Zenio
+        %td Zerg
+        %td 1097
+        %td ByuL
+        %td Zerg
+      %tr
+        %td 2012-04-16
+        %td 2560
+        %td EG_Masters_Cup_VII
+        %td 527
+        %td Entombed_Valley
+        %td 1988
+        %td aLive
+        %td Terran
+        %td 222
+        %td HerO
+        %td Protoss
+      %tr
+        %td 2012-04-16
+        %td 2560
+        %td EG_Masters_Cup_VII
+        %td 510
+        %td ESV_Cloud_Kingdom
+        %td 2084
+        %td Moon
+        %td Zerg
+        %td 678
+        %td NonY
+        %td Protoss
+      %tr
+        %td 2012-04-16
+        %td 2560
+        %td EG_Masters_Cup_VII
+        %td 501
+        %td Crossfire_SE_1.1
+        %td 1097
+        %td ByuL
+        %td Zerg
+        %td 1903
+        %td Zenio
+        %td Zerg
+
+.section
+  %h2 Machine Learning
 
   %p
-    We scrape match result data from two sections, sc2-international and sc2-korean, and also scrape map data.
-    %br/
-    %code TODO: header field examples
+    Stuff about ML
