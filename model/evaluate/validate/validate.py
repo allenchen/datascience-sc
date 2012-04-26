@@ -1,24 +1,27 @@
 import numpy as np
+import matplotlib.font_manager
 import pylab as pl
 from scipy import interp
 
 from sklearn.metrics import roc_curve, auc
-from sklearn.cross_validation import StratifiedKFold
+from sklearn.cross_validation import KFold
+
+# Set font size
+font_prop = matplotlib.font_manager.FontProperties(size=10)
 
 def cross_validate(data, model, folds):
     results = []
     features = data['data']
     targets = data['targets']
 
-    cv = StratifiedKFold(targets, k=folds)
+    cv = KFold(len(targets), k=folds)
     for i, (train, test) in enumerate(cv):
         probs = model.fit(features[train], targets[train]).predict_proba(features[test])
         fpr, tpr, thresholds = roc_curve(targets[test], probs[:, 1])
         results.append((fpr, tpr))
-
     return results
 
-def draw_roc_curves(results):
+def plot_roc_curves(results):
     mean_tpr = 0.0
     mean_fpr = np.linspace(0, 1, 100)
     all_tpr = []
@@ -48,6 +51,13 @@ def draw_roc_curves(results):
     pl.xlabel('False Positive Rate')
     pl.ylabel('True Positive Rate')
     pl.title('Receiver operating characteristic example')
-    pl.legend(loc="lower right")
+    pl.legend(loc="lower right", prop=font_prop)
+
+def draw_roc_curves(results):
+    plot_roc_curves(results)
     pl.show()
-    
+
+def save_roc_curves(results, name):
+    plot_roc_curves(results)
+    pl.savefig("figs/" + name + ".png", dpi=300)
+    pl.close()
