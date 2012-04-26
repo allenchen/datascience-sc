@@ -105,7 +105,13 @@ def get_record(query):
   if type(query) in (int, str):  # pid
     query = key_for(query)
 
-  return db.data.find_one(query)
+  print(query)
+  record = db.data.find_one(query)
+
+  if record is None:
+    raise ValueError("Got None record for query {0}".format(query))
+
+  return record
 
 MIN_DATE = 733981
 def normalize_date(d):
@@ -113,15 +119,17 @@ def normalize_date(d):
     d = dateutil.parser.parse(d)
   elif type(d) == datetime.datetime:
     pass
+  elif type(d) == int:
+    d = dt.fromordinal(d)
   else:
     raise TypeError("argument must be str or datetime.datetime")
 
-  current = datetime.date.today().toordinal()
+  current = dt.today().toordinal()
   tscale = current-MIN_DATE
-  normalized = 1.0/(1+np.exp(-(((d.toordinal()-MIN_DATE)/tscale)*12 - 6)))
+  normalized = 1/(1+np.exp(-(((d.toordinal()-MIN_DATE)/tscale)*12 - 6)))
   return normalized
 
-def get_features(map_id, p1_id, p1_race, p2_id, p2_race, date):
+def get_features_2(date, map_id, p1_id, p1_race, p2_id, p2_race):
   """
   Prediction for p1's performance against p2 on given map and date
 
@@ -134,39 +142,61 @@ def get_features(map_id, p1_id, p1_race, p2_id, p2_race, date):
     date:   String like '2012-04-26' of match date, or a datetime.datetime
   """
   valid_races = [race for race, _ in RACES]
+
+  if type(p1_race) == int and type(p2_race) == int:
+    int_name_map = dict([[v,k] for k,v in RACE_MAP.items()])
+    p1_race, p2_race = [int_name_map[r][0].lower() for r in (p1_race, p2_race)]
+
   if p1_race not in valid_races or p2_race not in valid_races:
     raise ValueError("Races must be chosen from {0}".format(valid_races))
 
   map_id, p1_id, p2_id = [str(x) for x in (map_id, p1_id, p2_id)]
   r1, r2 = get_record(p1_id), get_record(p2_id)
 
-  feature = (
-    # time
-    normalize_date(date),
+  def get_f(dic, f, default=0.5):
+    try:
+      return f(dic)
+    except KeyError as e:
+      print "ERROR: {0}".format(e)
+      raise e
+      return default
 
-    # p1_wr_against_race2_on_map,
-    r1['map'][map_id][p2_race],
+  #   time
+  f1 = normalize_date(date)
 
-    #   p2_wr_against_race1_on_map,
-    r2['map'][map_id][p1_race],
+  # p1_wr_against_race2_on_map
+  #f2 = r1['map'][map_id][p2_race]
+  f2 = get_f(r1['map'], lambda d: d[map_id][p2_race])
 
-    # p1_wr_on_map,
-    r1['map'][map_id]['rate'],
+  #   p2_wr_against_race1_on_map
+  #f3 = r2['map'][map_id][p1_race]
+  f3 = get_f(r2['map'], lambda d: d[map_id][p1_race])
 
-    #   p2_wr_on_map,
-    r2['map'][map_id]['rate'],
+  # p1_wr_on_map
+  #f4 = r1['map'][map_id]['rate']
+  f4 = get_f(r1['map'], lambda d: d[map_id]['rate'])
 
-    # p1_wr_against_race2_overall,
-    r1['race'][p2_race],
+  #   p2_wr_on_map
+  #f5 = r2['map'][map_id]['rate']
+  f5 = get_f(r2['map'], lambda d: d[map_id]['rate'])
 
-    #   p2_wr_against_race2_overall,
-    r2['race'][p1_race],
+  # p1_wr_against_race2_overall
+  #f6 = r1['race'][p2_race]
+  f6 = get_f(r1['race'], lambda d: d[p2_race])
 
-    # p1_wr_against_p2_overall
-    r1['opp'][p2_id]
-  )
+  #   p2_wr_against_race2_overall
+  #f7 = r2['race'][p1_race]
+  f7 = get_f(r2['race'], lambda d: d[p1_race])
 
-  return feature
+  # p1_wr_against_p2_overall
+  f8 = r1['opp'][p2_id]
+
+  # p1_wr_against_p2_on_map
+  f9 = 0.5 # TODO
+
+  feature = (f1, f2, f3, f4, f5, f6, f7, f8, f9)
+  features = np.array([feature]).astype(np.float)
+  return features
 
 def isnan(x):
   return type(x) == float and math.isnan(x)
@@ -293,7 +323,8 @@ def get_features(time, map_id, pid, prace, oid, orace):
                         win_rate_race(df, pid, orace),
                         win_rate_race(df, oid, prace),
                         win_rate_player(df, pid, oid),#]]).astype(np.float)
-                        win_rate_player_map(df, pid, oid, map_id)]]).astype(np.float)
+                        win_rate_player_map(df, pid, oid, map_id)
+                       ]]).astype(np.float)
   return features
 
 RACES = ( ('t', RACE_MAP['Terran']),
