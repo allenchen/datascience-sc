@@ -4,12 +4,10 @@ from sklearn.tree import *
 from sklearn.cross_validation import KFold
 
 class StackingModel:
-    # Actually create the majority model
-    model_0 = LinearRegression()
-    model_1 = LinearRegression()
-
     def __init__(self, models):
-        # TO-DO: Probably should pass models as parameters
+        # Actually create the majority model
+        self.model_0 = LinearRegression()
+        self.model_1 = LinearRegression()
         self.models = models
 
     def fit(self, features, targets):

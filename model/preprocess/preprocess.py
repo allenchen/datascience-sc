@@ -29,7 +29,8 @@ import numpy as np
 import math
 import dateutil.parser
 from memoize import memoize
-
+from math import exp
+from datetime import date as dt
 
 HEADER_PATH       = 'data/players/header.csv'
 RESULTS_PATH      = 'data/players/players.csv'
@@ -58,9 +59,11 @@ def load_data(result_paths=[], header_path=None, verbose=True):
     df['date'] = [dateutil.parser.parse(date) for date in df['date']]
 
     # time = e^(-(date-earliest))
-    earliest = df['date'].min().toordinal() + 0.1   # offset to not get zeros
-    df['time'] = np.exp([earliest-d.toordinal() for d in df['date']])
-
+    earliest = df['date'].min().toordinal()
+    current = dt.today().toordinal()
+    tscale = current-earliest
+    time = [1/(1+exp(-(((d.toordinal()-earliest)/tscale)*12 - 6))) for d in df['date']]
+    df['time'] = np.array(time).astype(np.float)
   return df
 
 global __avg_map_size
@@ -136,6 +139,38 @@ def win_rate_race_map(df, player_id, opp_race, map_id):
   r = float(len(win_df)) / float(n_matches)
   return r
 
+def get_features(time, map_id, pid, prace, oid, orace):
+  results_df = load_data([RESULTS_PATH], header_path=HEADER_PATH)
+  map_df = load_data([MAPS_RESULTS_PATH], header_path=MAPS_HEADER_PATH)
+  df = pandas.merge(results_df, map_df, on='map_id', how='inner')
+
+  # Filter out based on map numbers that are unknown
+  df = df[df['map_id'] != 0]
+  df = df[df['map_id'] != 222]
+
+  df['winner_race'] = [RACE_MAP[race] for race in df['winner_race']]
+  df['loser_race'] = [RACE_MAP[race] for race in df['loser_race']]
+
+  my_win_rate = win_rate_race_map(df, pid, orace, map_id) 
+  opp_win_rate = win_rate_race_map(df, oid, prace, map_id)
+
+  # Below for time stuff
+  earliest = 733981
+  current = dt.today().toordinal()
+  tscale = current-earliest
+  time = 1/(1+exp(-(((time-earliest)/tscale)*12 - 6)))
+
+  features = np.array([[time,
+                        my_win_rate,
+                        opp_win_rate,
+                        win_rate_map(df, pid, map_id),
+                        win_rate_map(df, oid, map_id),
+                        win_rate_race(df, pid, orace),
+                        win_rate_race(df, oid, prace),
+                        win_rate_player(df, pid, oid),#]]).astype(np.float)
+                        win_rate_player_map(df, pid, oid, map_id)]]).astype(np.float)
+  return features
+
 def process_data():
   """
   win rate: of this player against opponent's race on this map
@@ -184,6 +219,26 @@ def process_data():
 
       my_win_rate, opp_win_rate = win_rate_race_map(df, my_id, opp_race, map_id), win_rate_race_map(df, opp_id, my_race, map_id)
 
+      #r2
+      features = np.array([time,
+                           my_win_rate,
+                           opp_win_rate,
+                           win_rate_map(df, my_id, map_id),
+                           win_rate_map(df, opp_id, map_id),
+                           win_rate_race(df, my_id, opp_race),
+                           win_rate_race(df, opp_id, my_race),
+                           win_rate_player(df, my_id, opp_id),
+                           win_rate_player_map(df, my_id, opp_id, map_id)]).astype(np.float)
+      """
+      #r1_1
+      features = np.array([time,
+                           win_rate_map(df, my_id, map_id),
+                           win_rate_map(df, opp_id, map_id),
+                           win_rate_race(df, my_id, opp_race),
+                           win_rate_race(df, opp_id, my_race),
+                           win_rate_player(df, my_id, opp_id)]).astype(np.float)
+
+      #r1
       features = np.array([time,
                            my_win_rate,
                            opp_win_rate,
@@ -192,27 +247,12 @@ def process_data():
                            win_rate_race(df, my_id, opp_race),
                            win_rate_race(df, opp_id, my_race),
                            win_rate_player(df, my_id, opp_id)]).astype(np.float)
-      #win_rate_player_map(df, my_id, opp_id, map_id)
-                           
-      """
-      features = np.array([my_win_rate,
-                           win_rate_player(df, my_id, opp_id),
-                           win_rate_player_map(df, my_id, opp_id, map_id),
-                           win_rate_map(df, my_id, map_id),
-                           win_rate_race(df, my_id, opp_race),
-                           opp_win_rate, time]).astype(np.float)
-      """
-      """
-      features = np.array([my_race, my_win_rate, 
-                           win_rate_player(df, my_id, opp_id), 
-                           opp_race, opp_win_rate, time]).astype(np.float)
-      """
 
-      """
-      features = np.array([my_race, opp_race, my_win_rate, opp_win_rate,
-        #map_size_x, map_size_y, n_start_pos,
-        win_rate_player(df, my_id, opp_id),
-        time]).astype(np.float)
+      #r0
+      features = np.array([time,
+                           my_win_rate,
+                           opp_win_rate,
+                           win_rate_player(df, my_id, opp_id)]).astype(np.float)
       """
 
       data[my_id]['data'].append(features)

@@ -3,12 +3,9 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.cross_validation import KFold
 
 class MajorityModel:
-    # Actually create the majority model
-    model = LogisticRegression()
-
     def __init__(self, models):
-        # TO-DO: Probably should pass models as parameters
         self.models = models
+        self.model = LogisticRegression()
 
     def fit(self, features, targets):
         # Train all the passed in models first using 10-fold CV

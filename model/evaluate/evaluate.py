@@ -7,11 +7,11 @@ from validate import validate
 from sklearn.metrics import precision_recall_fscore_support
 
 # Import models to use
-from sklearn.linear_model import LogisticRegression
-from sklearn.naive_bayes import GaussianNB
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import *
+from sklearn.naive_bayes import *
+from sklearn.tree import *
+from sklearn.svm import *
+from sklearn.ensemble import *
 
 def evaluate_whole(data, model):
     predictions = model.fit(data['data'], data['targets']).predict(data['data'])
@@ -26,7 +26,7 @@ def evaluate_logit(player_data, id):
     #print evaluate_whole(player_data, player_model)
 
 def evaluate_naive(player_data, id):
-    player_model = GaussianNB()
+    player_model = MultinomialNB()
     results = validate.cross_validate(player_data, player_model, 10)
     validate.save_roc_curves(results, "naive/" + str(id))
     #print "Naiive Baye results:"
@@ -55,7 +55,7 @@ def evaluate_forest(player_data, id):
 
 def evaluate_wmm(player_data, id):
     models = [LogisticRegression(penalty='l1'),
-              GaussianNB(),
+              MultinomialNB(),
               DecisionTreeClassifier(),
               SVC(probability=True, kernel='rbf', gamma=0.3),
               RandomForestClassifier(n_estimators=20, n_jobs=-1)]
@@ -67,7 +67,7 @@ def evaluate_wmm(player_data, id):
 
 def evaluate_smm(player_data, id):
     models = [LogisticRegression(penalty='l1'),
-              GaussianNB(),
+              MultinomialNB(),
               DecisionTreeClassifier(),
               SVC(probability=True, kernel='rbf', gamma=0.3),
               RandomForestClassifier(n_estimators=20, n_jobs=-1)]
