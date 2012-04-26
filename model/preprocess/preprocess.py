@@ -89,7 +89,6 @@ def win_rate_generic(df, win_df, loss_df):
 def win_rate_map(df, player_id, map_id):
   d = df[df['map_id'] == map_id]
   win_df, loss_df = [ d[d[player_col] == player_id] for player_col in ('winner_id', 'loser_id') ]
-
   return win_rate_generic(df, win_df, loss_df)
 
 @memoize
@@ -185,13 +184,24 @@ def process_data():
 
       my_win_rate, opp_win_rate = win_rate_race_map(df, my_id, opp_race, map_id), win_rate_race_map(df, opp_id, my_race, map_id)
 
+      features = np.array([time,
+                           my_win_rate,
+                           opp_win_rate,
+                           win_rate_map(df, my_id, map_id),
+                           win_rate_map(df, opp_id, map_id),
+                           win_rate_race(df, my_id, opp_race),
+                           win_rate_race(df, opp_id, my_race),
+                           win_rate_player(df, my_id, opp_id)]).astype(np.float)
+      #win_rate_player_map(df, my_id, opp_id, map_id)
+                           
+      """
       features = np.array([my_win_rate,
                            win_rate_player(df, my_id, opp_id),
                            win_rate_player_map(df, my_id, opp_id, map_id),
                            win_rate_map(df, my_id, map_id),
                            win_rate_race(df, my_id, opp_race),
                            opp_win_rate, time]).astype(np.float)
-
+      """
       """
       features = np.array([my_race, my_win_rate, 
                            win_rate_player(df, my_id, opp_id), 
