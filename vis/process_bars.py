@@ -10,7 +10,7 @@ from datetime import datetime
 
 league_ids = set()
 
-df = read_csv('sc2_korean_p0_p199.csv')
+df = read_csv('../scraper/results/sc2-international/results_with_header.csv')
 
 for league_id in df['league_id']:
     league_ids.add(league_id)
@@ -26,8 +26,14 @@ string_party_map = {
 
 date_map = {
     "Zerg": [0]*len(ordered_leagues),
-    "Protoss": [0]*len(ordered_leagues),
-    "Terran": [0]*len(ordered_leagues)
+    "Terran": [0]*len(ordered_leagues),
+    "Protoss": [0]*len(ordered_leagues)
+}
+
+losing_date_map = {
+    "Zerg": [0]*len(ordered_leagues),
+    "Terran": [0]*len(ordered_leagues),
+    "Protoss": [0]*len(ordered_leagues)
 }
 
 formatted_date_map = {
@@ -37,10 +43,14 @@ formatted_date_map = {
 }
 
 for i,race in enumerate(df['winner_race']):
+#    print race, df['loser_race'][i]
     date_map[race][ordered_leagues.index(df['league_id'][i])] += 1
+    losing_date_map[df['loser_race'][i]][ordered_leagues.index(df['league_id'][i])] += 1
 
 for pid, party in enumerate(date_map):
     for i,value in enumerate(date_map[party]):
-        formatted_date_map[party][i] = { "x": i, "y": value, "p": string_party_map[party] }
+        formatted_date_map[party][i] = { "x": i, 
+                                         "y": (value/float(value+losing_date_map[party][i])) if value > 0 else 0,
+                                         "p": string_party_map[party] }
 
 print formatted_date_map

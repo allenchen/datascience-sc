@@ -90,7 +90,7 @@ function postprocess_bars(total_width, total_height) {
 	.attr("class", "bar")
 	.attr("transform", function(d) { return "translate(" + x(d) + ",0)"; })
     
-    bars.append("title").text(function(d) { return Math.round(d.y); });
+    bars.append("title").text(function(d) { return d.y; });
 
     bars.append("rect")
 	.attr("width", x({x: .9}))
@@ -101,7 +101,7 @@ function postprocess_bars(total_width, total_height) {
 	.delay(function(d, i) { return i * 10; })
 	.attr("y", y1)
 	.attr("height", function(d) { return y0(d) - y1(d); })
-	.attr("bar_value", function(d) { return Math.round(d.y); })
+	.attr("bar_value", function(d) { return d.y; })
 	.attr("week", function(d) { return d.x; })
 	.attr("party", function(d) { return d.p; } );
     
