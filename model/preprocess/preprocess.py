@@ -8,12 +8,15 @@ Usage:
   Returns a dict of:
     {
       player_id [int]: {
-        data: [ [race, opponent_race,
-                 win_rate, opp_win_rate,
-#                 map_size_x, map_size_y, nStartPos,
-                 win_rate_against_opponent,
-                 win_rate_against_opponent_on_map,
-                 time
+        data: [ [
+                  time,
+                  p1_wr_against_race2_on_map,
+                    p2_wr_against_race1_on_map,
+                  p1_wr_on_map,
+                    p2_wr_on_map,
+                  p1_wr_against_race2_overall,
+                    p2_wr_against_race2_overall,
+                  p1_wr_against_p2_overall
                 ],
                 ...
               ],
@@ -22,15 +25,63 @@ Usage:
       :
       :
     }
+
+
+Cached data:
+
+  { p1_id:
+    { 'opp':
+      { p2_id: p1_wr_over_p2,
+         :
+         :
+      },
+
+      'map':
+      { map_id:
+        { 't': p1_wr_over_terran_for_this_map,
+          'p': p1_wr_over_protoss_for_this_map,
+          'z': p1_wr_over_zerg_for_this_map,
+          'r': p1_wr_overall_for_this_map
+        }
+        :
+        :
+      },
+
+      'race':
+      { 't': p1_wr_over_terran,
+        'p': p1_wr_over_protoss,
+        'z': p1_wr_over_zerg,
+      }
+    }
+    :
+    :
+  }
+
+API:
+
+  f(map_id, p1_id, p2_id, time) -> [feature]
+    -> { data: [ [feature1], [feature2], ... ], outcomes: [ o1, o2, ... ] }
+
 """
 
 import pandas
 import numpy as np
 import math
+import datetime
 import dateutil.parser
 from memoize import memoize
 from math import exp
 from datetime import date as dt
+from pymongo import Connection
+import os
+from multiprocessing import Pool
+
+try:
+  connection = Connection(os.environ['MONGO_SERVER'])
+except KeyError:
+  connection = Connection()
+db = connection['sicp']
+# .data table
 
 HEADER_PATH       = 'data/players/header.csv'
 RESULTS_PATH      = 'data/players/players.csv'
@@ -42,6 +93,80 @@ RACE_MAP = {
   'Terran' : 1,
   'Zerg'   : 2
 }
+
+def key_for(pid):
+  return { 'pid': str(pid) }
+
+def get_record(query):
+  """
+  Args:
+    query [dict, int]
+  """
+  if type(query) in (int, str):  # pid
+    query = key_for(query)
+
+  return db.data.find_one(query)
+
+MIN_DATE = 733981
+def normalize_date(d):
+  if type(d) == str:
+    d = dateutil.parser.parse(d)
+  elif type(d) == datetime.datetime:
+    pass
+  else:
+    raise TypeError("argument must be str or datetime.datetime")
+
+  current = datetime.date.today().toordinal()
+  tscale = current-MIN_DATE
+  normalized = 1.0/(1+np.exp(-(((d.toordinal()-MIN_DATE)/tscale)*12 - 6)))
+  return normalized
+
+def get_features(map_id, p1_id, p1_race, p2_id, p2_race, date):
+  """
+  Prediction for p1's performance against p2 on given map and date
+
+  Args:
+    map_id: Map on which the players compete
+    p1_id:  First player's id
+     p2_id
+    p1_race: One of ('t', 'p', 'z')
+     p2_race
+    date:   String like '2012-04-26' of match date, or a datetime.datetime
+  """
+  valid_races = [race for race, _ in RACES]
+  if p1_race not in valid_races or p2_race not in valid_races:
+    raise ValueError("Races must be chosen from {0}".format(valid_races))
+
+  map_id, p1_id, p2_id = [str(x) for x in (map_id, p1_id, p2_id)]
+  r1, r2 = get_record(p1_id), get_record(p2_id)
+
+  feature = (
+    # time
+    normalize_date(date),
+
+    # p1_wr_against_race2_on_map,
+    r1['map'][map_id][p2_race],
+
+    #   p2_wr_against_race1_on_map,
+    r2['map'][map_id][p1_race],
+
+    # p1_wr_on_map,
+    r1['map'][map_id]['rate'],
+
+    #   p2_wr_on_map,
+    r2['map'][map_id]['rate'],
+
+    # p1_wr_against_race2_overall,
+    r1['race'][p2_race],
+
+    #   p2_wr_against_race2_overall,
+    r2['race'][p1_race],
+
+    # p1_wr_against_p2_overall
+    r1['opp'][p2_id]
+  )
+
+  return feature
 
 def isnan(x):
   return type(x) == float and math.isnan(x)
@@ -83,7 +208,7 @@ def win_rate_generic(df, win_df, loss_df):
   n_matches = len(win_df) + len(loss_df)
 
   if n_matches == 0:
-    print "no matches -> 0.5"
+    #print "no matches -> 0.5"
     return 0.5
 
   return float(len(win_df)) / float(n_matches)
@@ -106,7 +231,7 @@ def win_rate_player(df, player_id, opp_id):
   n_matches = len(win_df) + len(loss_df)
 
   if n_matches == 0:
-    print "w_r_p: no matches -> 0.5"
+    #print "w_r_p: no matches (pid: {0}, oid: {1}) -> 0.5".format(player_id, opp_id)
     return 0.5
 
   return float(len(win_df)) / float(n_matches)
@@ -133,7 +258,7 @@ def win_rate_race_map(df, player_id, opp_race, map_id):
   n_matches = len(win_df) + len(loss_df)
 
   if n_matches == 0:
-    print "w_r_r_m: no matches -> 0.5"
+    #print "w_r_r_m: no matches -> 0.5"
     return 0.5
 
   r = float(len(win_df)) / float(n_matches)
@@ -171,22 +296,95 @@ def get_features(time, map_id, pid, prace, oid, orace):
                         win_rate_player_map(df, pid, oid, map_id)]]).astype(np.float)
   return features
 
-def process_data():
-  """
-  win rate: of this player against opponent's race on this map
-            if never played on this map, default to 0.5
-  """
+RACES = ( ('t', RACE_MAP['Terran']),
+          ('p', RACE_MAP['Protoss']),
+          ('z', RACE_MAP['Zerg']) )
+def __persist_datum__(args):
+  i, pid, df, player_ids, map_ids, replace_existing = args
+  n_pids = len(player_ids)
+  d_i = n_pids // 10
+
+  if i % d_i == 0:
+    print "{0}%".format(float(i)/n_pids)
+
+  if not replace_existing and db.data.find_one({ 'pid': str(pid) }):
+    print "({0} / {1}): {2}".format(i, n_pids, pid)
+    return
+
+  datum = {
+    'pid': str(pid),
+    'opp': {},
+    'map': {},
+    'race': {}
+  }
+
+  # race
+  for race_label, race_id in RACES:
+    datum['race'][race_label] = win_rate_race(df, pid, race_id)
+
+  # map
+  for map_id in map_ids:
+    h = {}
+    for race_label, race_id in RACES:
+      h[race_label] = win_rate_race_map(df, pid, race_id, map_id)
+    h['rate'] = win_rate_map(df, pid, map_id)
+    datum['map'][str(map_id)] = h
+
+  # opponents
+  for opp_id in player_ids:
+    if pid == opp_id: continue
+    datum['opp'][str(opp_id)] = win_rate_player(df, pid, opp_id)
+
+  if replace_existing:
+    db.data.remove({ 'pid': str(pid) })
+  db.data.insert(datum)
+
+  #print db.data.find_one({ 'pid': str(pid) })
+  print "{0} / {1}: {2}".format(i, n_pids, pid)
+
+def persist_data(df=None, replace_existing=False):
+  print "persist_data()"
+
+  if df is None:
+    df = pp_df()
+
+  player_ids = list(set(df['winner_id']).union(set(df['loser_id'])))
+  map_ids = set(df['map_id'])
+
+  pool = Pool(16)
+  pool.map(__persist_datum__, [(i, pid, df, player_ids, map_ids, replace_existing) for i, pid in enumerate(player_ids)])
+
+  print ">>> persist_data() done"
+
+@memoize
+def pp_df():
+  print "Loading df..."
   results_df = load_data([RESULTS_PATH], header_path=HEADER_PATH)
   map_df = load_data([MAPS_RESULTS_PATH], header_path=MAPS_HEADER_PATH)
   df = pandas.merge(results_df, map_df, on='map_id', how='inner')
 
   # Filter out based on map numbers that are unknown
+  print "Preprocessing df..."
   df = df[df['map_id'] != 0]
   df = df[df['map_id'] != 222]
 
   df['winner_race'] = [RACE_MAP[race] for race in df['winner_race']]
   df['loser_race'] = [RACE_MAP[race] for race in df['loser_race']]
 
+  for col in ('winner_id', 'loser_id', 'map_id'):
+    df[col] = [int(x) for x in df[col]]
+
+  print "pp_df: done"
+
+  return df
+
+@memoize
+def process_data():
+  """
+  win rate: of this player against opponent's race on this map
+            if never played on this map, default to 0.5
+  """
+  df = pp_df()
   print df
   print df.head()
 
@@ -217,12 +415,12 @@ def process_data():
       if my_id not in data:
         data[my_id] = { 'data': [], 'targets': [] }
 
-      my_win_rate, opp_win_rate = win_rate_race_map(df, my_id, opp_race, map_id), win_rate_race_map(df, opp_id, my_race, map_id)
+      #my_win_rate, opp_win_rate = win_rate_race_map(df, my_id, opp_race, map_id), win_rate_race_map(df, opp_id, my_race, map_id)
 
       #r2
       features = np.array([time,
-                           my_win_rate,
-                           opp_win_rate,
+                           win_rate_race_map(df, my_id, opp_race, map_id),
+                           win_rate_race_map(df, opp_id, my_race, map_id),
                            win_rate_map(df, my_id, map_id),
                            win_rate_map(df, opp_id, map_id),
                            win_rate_race(df, my_id, opp_race),
@@ -273,4 +471,5 @@ def process_data():
   return data
 
 if __name__ == "__main__":
-  process_data()
+  persist_data()
+  #process_data()
