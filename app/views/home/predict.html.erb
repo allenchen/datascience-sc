@@ -1,0 +1,26 @@
+<%= form_tag predict_path do %>
+  <div class='field'>
+    <%= label_tag :date %>
+    <%= text_field_tag :date, nil, :placeholder => 'yyyy-mm-dd' %>
+  </div>
+  <div class='field'>
+    <%= label_tag :mid, 'Map ID' %>
+    <%= text_field_tag :mid, nil, :placeholder => 'nnn' %>
+  </div>
+  <div class='field'>
+    <%= label_tag :pid, 'Player 1 ID' %>
+    <%= text_field_tag :pid, nil, :placeholder => 'nnn' %>
+    <%= label_tag :prace, 'Player 1 Race' %>
+    <%# text_field_tag :prace, nil, :placeholder => '[0 1 2]' %>
+    <%= select_tag :prace, options_from_collection_for_select({'Terran' => 0, 'Protoss'=>1, 'Zerg'=>2}, :last, :first) %>
+  </div>
+  <div class='field'>
+    <%= label_tag :cid, 'Player 2 ID' %>
+    <%= text_field_tag :cid, nil, :placeholder => 'nnn' %>
+    <%= label_tag :crace, 'Player 2 Race' %>
+    <%# text_field_tag :crace, nil, :placeholder => '[0 1 2]' %>
+    <%= select_tag :crace, options_from_collection_for_select({'Terran' => 0, 'Protoss'=>1, 'Zerg'=>2}, :last, :first) %>
+  </div>
+
+  <%= submit_tag 'DO EET' %>
+<%- end -%>

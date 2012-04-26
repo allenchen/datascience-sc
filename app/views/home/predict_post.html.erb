@@ -1,0 +1,18 @@
+<%# @json.inspect %>
+
+<div>
+  <h1>Result</h1>
+  <div class="center"><%= @json['stuff']['result'] %></div>
+</div>
+
+<div>
+  <h1>Probabilities</h1>
+  <div class="center">
+    Player 1:
+    <span class="center"><%= @json['stuff']['probabilities']['p'] %></span>
+  </div>
+  <div class="center">
+    Player 2:
+    <span class="center"><%= @json['stuff']['probabilities']['c'] %></span>
+  </div>
+</div>
