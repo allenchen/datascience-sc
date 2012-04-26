@@ -37,6 +37,7 @@ header, footer {
     padding: 0.25em;
     height: 100%;
     width: 6em;
+    cursor: pointer;
 
     @include regular-text();
     font-family: $fancy-font;
