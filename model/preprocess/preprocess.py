@@ -143,10 +143,21 @@ def process_data():
 
       my_win_rate, opp_win_rate = win_rate_race_map(df, my_id, opp_race, map_id), win_rate_race_map(df, opp_id, my_race, map_id)
 
+      features = np.array([my_win_rate, win_rate_player(df, my_id, opp_id),
+                           opp_win_rate, time]).astype(np.float)
+
+      """
+      features = np.array([my_race, my_win_rate, 
+                           win_rate_player(df, my_id, opp_id), 
+                           opp_race, opp_win_rate, time]).astype(np.float)
+      """
+
+      """
       features = np.array([my_race, opp_race, my_win_rate, opp_win_rate,
         #map_size_x, map_size_y, n_start_pos,
         win_rate_player(df, my_id, opp_id),
         time]).astype(np.float)
+      """
 
       data[my_id]['data'].append(features)
       data[my_id]['targets'].append(win_status)
