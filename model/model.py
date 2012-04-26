@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from evaluate import evaluate as ev
 from optparse import OptionParser
 from preprocess import preprocess as pp
@@ -58,10 +59,7 @@ def create_model(pid, data):
 
     return player_model
 
-def predict_model(time, mid, pid, prace, cid, crace):
-    m1 = pp.get_features(time, mid, pid, prace, cid, crace)
-    m2 = pp.get_features(time, mid, cid, crace, pid, prace)
-
+def predict_model_features(pid, cid, m1, m2):
     pmodel = pickle.load(open("save/" + str(pid) + ".pickle", "rb"))
     cmodel = pickle.load(open("save/" + str(cid) + ".pickle", "rb"))
 
@@ -84,6 +82,13 @@ def predict_model(time, mid, pid, prace, cid, crace):
     print str(cid) + " probabilities:"
     print cprob
     print "==================="
+
+def predict_model(time, mid, pid, prace, cid, crace):
+    m1 = pp.get_features(time, mid, pid, prace, cid, crace)
+    m2 = pp.get_features(time, mid, cid, crace, pid, prace)
+
+    return predict_model_features(pid, cid, m1, m2)
+
 
 if __name__ == "__main__":
     predict_model(734618, 510, 2322, 0, 70, 1)
