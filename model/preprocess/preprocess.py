@@ -304,8 +304,11 @@ def __persist_datum__(args):
   #print db.data.find_one({ 'pid': str(pid) })
   print "{0} / {1}: {2}".format(i, n_pids, pid)
 
-def persist_data(df, replace_existing=False):
+def persist_data(df=None, replace_existing=False):
   print "persist_data()"
+
+  if df is None:
+    df = pp_df()
 
   player_ids = list(set(df['winner_id']).union(set(df['loser_id'])))
   map_ids = set(df['map_id'])
@@ -404,6 +407,5 @@ def process_data():
   return data
 
 if __name__ == "__main__":
-  df = pp_df()
-  persist_data(df)
+  persist_data()
   #process_data()
