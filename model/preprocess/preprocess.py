@@ -12,6 +12,7 @@ Usage:
                  win_rate, opp_win_rate,
 #                 map_size_x, map_size_y, nStartPos,
                  win_rate_against_opponent,
+                 win_rate_against_opponent_on_map,
                  time
                 ],
                 ...
@@ -75,9 +76,30 @@ def avg_map_size(df):
   __avg_map_size = avg_size
   return avg_size
 
+def win_rate_generic(df, win_df, loss_df):
+  n_matches = len(win_df) + len(loss_df)
+
+  if n_matches == 0:
+    print "no matches -> 0.5"
+    return 0.5
+
+  return float(len(win_df)) / float(n_matches)
+
+@memoize
+def win_rate_map(df, player_id, map_id):
+  d = df[df['map_id'] == map_id]
+  win_df, loss_df = [ d[d[player_col] == player_id] for player_col in ('winner_id', 'loser_id') ]
+
+  return win_rate_generic(df, win_df, loss_df)
+
+@memoize
+def win_rate_race(df, player_id, opp_race):
+  win_df, loss_df = [df[np.logical_and(df[player_col] == player_id, df[race_col] == opp_race)] for player_col, race_col in ( ('winner_id','loser_race'), ('loser_id','winner_race') )]
+  return win_rate_generic(df, win_df, loss_df)
+
 @memoize
 def win_rate_player(df, player_id, opp_id):
-  win_df, loss_df = [ df[np.logical_or(df[player_col] == player_id, df[opp_col] == opp_id)] for player_col, opp_col in ( ('winner_id', 'loser_id'), ('loser_id', 'winner_id') ) ]
+  win_df, loss_df = [ df[np.logical_and(df[player_col] == player_id, df[opp_col] == opp_id)] for player_col, opp_col in ( ('winner_id', 'loser_id'), ('loser_id', 'winner_id') ) ]
 
   n_matches = len(win_df) + len(loss_df)
 
@@ -88,9 +110,23 @@ def win_rate_player(df, player_id, opp_id):
   return float(len(win_df)) / float(n_matches)
 
 @memoize
+def win_rate_player_map(df, player_id, opp_id, map_id):
+  d = df[df['map_id'] == map_id]
+  win_df, loss_df = [ d[np.logical_and(d[player_col] == player_id, d[opp_col] == opp_id)] for player_col, opp_col in ( ('winner_id','loser_id'), ('loser_id','winner_id') ) ]
+
+  n_matches = len(win_df) + len(loss_df)
+
+  if n_matches == 0:
+    print "w_r_p_m: no matches -> 0.5"
+    return 0.5
+
+  r = float(len(win_df)) / float(n_matches)
+  return r
+
+@memoize
 def win_rate_race_map(df, player_id, opp_race, map_id):
   d = df[df['map_id'] == map_id]
-  win_df, loss_df = [ d[np.logical_or(d[player_col] == player_id, d[race_col] == opp_race)] for player_col, race_col in ( ('winner_id','loser_race'), ('loser_id','winner_race') ) ]
+  win_df, loss_df = [ d[np.logical_and(d[player_col] == player_id, d[race_col] == opp_race)] for player_col, race_col in ( ('winner_id','loser_race'), ('loser_id','winner_race') ) ]
 
   n_matches = len(win_df) + len(loss_df)
 
@@ -114,10 +150,17 @@ def process_data():
   df = df[df['map_id'] != 0]
   df = df[df['map_id'] != 222]
 
+  df['winner_race'] = [RACE_MAP[race] for race in df['winner_race']]
+  df['loser_race'] = [RACE_MAP[race] for race in df['loser_race']]
+
   print df
   print df.head()
 
   data = {}
+
+  n_rows = len(df)
+  PROGRESS_PCT = 10
+  d_r = n_rows // PROGRESS_PCT
 
   for (i_row, row) in df.iterrows():
     map_id, map_size, n_start_pos = [row[k] for k in ('map_id', 'map_size', 'map_spots')]
@@ -135,7 +178,6 @@ def process_data():
       my_id,  my_race  = [row["%s_%s" % (my_str, k)]  for k in ('id', 'race')]
       opp_id, opp_race = [row["%s_%s" % (opp_str, k)] for k in ('id', 'race')]
 
-      my_race, opp_race = RACE_MAP[my_race], RACE_MAP[opp_race]
       my_id, opp_id = int(my_id), int(opp_id)
 
       if my_id not in data:
@@ -143,7 +185,11 @@ def process_data():
 
       my_win_rate, opp_win_rate = win_rate_race_map(df, my_id, opp_race, map_id), win_rate_race_map(df, opp_id, my_race, map_id)
 
-      features = np.array([my_win_rate, win_rate_player(df, my_id, opp_id),
+      features = np.array([my_win_rate,
+                           win_rate_player(df, my_id, opp_id),
+                           win_rate_player_map(df, my_id, opp_id, map_id),
+                           win_rate_map(df, my_id, map_id),
+                           win_rate_race(df, my_id, opp_race),
                            opp_win_rate, time]).astype(np.float)
 
       """
@@ -161,7 +207,11 @@ def process_data():
 
       data[my_id]['data'].append(features)
       data[my_id]['targets'].append(win_status)
-      #print my_id, ':', data[my_id]
+
+      if i_row % d_r == 0:
+        print "{0}%".format(float(i_row)/float(n_rows))
+        print "  ", my_id, ":", data[my_id], "\n"
+        #print my_id, ':', data[my_id]
 
   for player_id in data.iterkeys():
     data[player_id]['data']    = np.array(data[player_id]['data'])
