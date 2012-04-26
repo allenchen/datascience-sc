@@ -5,20 +5,20 @@ Shadowbox.init();
 window.jan1 = new Date(2011, 0, 1);
 window.party_strings = {
     "0": "Zerg",
-    "1": "Protoss",
-    "2": "Terran"
+    "1": "Terran",
+    "2": "Protoss"
 };
 
 window.party_named_strings = {
     "0": "Zerg",
-    "1": "Protoss",
-    "2": "Terran"
+    "1": "Terran",
+    "2": "Protoss"
 };
 
 window.str_to_partyid = {
     "Zerg": 0,
-    "Protoss": 1,
-    "Terran": 2
+    "Terran": 1,
+    "Protoss": 2
 }
 
 window.party_colors = {
@@ -39,34 +39,6 @@ window.boxwhisker_status = {
 
 $(document).ready(function() {
 
-    $("#map_all_party_button").click(function(e) {
-	counties.attr("class", "RdBu");
-	load_map("preprocessed-data/normalized_diff_donations.json");
-	$(".map_menu li").removeClass("selected");
-	$("#map_all_party_li").addClass("selected");
-	return false;
-    });
-    $("#map_republican_button").click(function(e) {
-	counties.attr("class", "Reds");
-	load_map("preprocessed-data/normalized_republican_donations.json");
-	$(".map_menu li").removeClass("selected");
-	$("#map_republican_li").addClass("selected");
-	return false;
-    });
-    $("#map_democrat_button").click(function(e) {
-	counties.attr("class", "Blues");
-	load_map("preprocessed-data/normalized_democrat_donations.json");
-	$(".map_menu li").removeClass("selected");
-	$("#map_democrat_li").addClass("selected");
-	return false;
-    });
-    $("#map_libertarian_button").click(function(e) {
-	counties.attr("class", "Oranges");
-	load_map("preprocessed-data/normalized_libertarian_donations.json");
-	$(".map_menu li").removeClass("selected");
-	$("#map_libertarian_li").addClass("selected");
-	return false;
-    });
     
     function get_checked_parties(checkboxes) {
 	var checked_parties = [];
@@ -110,7 +82,7 @@ $(document).ready(function() {
 					       .find("rect")
 					       .attr("week"))*1000*86400*7);
 	    $("#barchart_hover_value")
-		.text(parseInt($(this).find("rect")
+		.text(parseFloat($(this).find("rect")
 				     .attr("bar_value")));
 	    $("#barchart_hover_text")
 		.html("<span class=\"party_" + pid + "\">" + 
@@ -167,11 +139,5 @@ $(document).ready(function() {
 	return false;
     });
 
-    $("#toggle_boxwhisker_outliers").click(function() {
-	window.boxwhisker_status.show_outliers = !window.boxwhisker_status.show_outliers;
-	$("#boxwhisker").empty();
-	window.load_boxwhisker();
-	return false;
-    });
 
 });

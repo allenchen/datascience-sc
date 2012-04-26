@@ -37,6 +37,11 @@ class MajorityModel:
 
         # Train on these results
         self.model.fit(results, probs_targets)
+
+        # Re-train the models on the whole test set
+        for i in range(len(self.models)):
+            self.models[i].fit(features, targets)
+
         return self
 
     def predict_meta(self, features):
