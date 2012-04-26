@@ -13,7 +13,7 @@ app.get('/predict', function(req, res){
     results: {},
   };
 
-  child = exec('./runner '+req.query.p, function(error, stdout, stderr){
+  child = exec('../model/model.py '+[req.query.date, req.query.mid, req.query.pid, req.query.prace, req.query.cid, req.query.crace].join(' '), function(error, stdout, stderr){
     if(stderr) p.error = stderr;
     if(error) p.error = error;
     p.stuff = JSON.parse(stdout);

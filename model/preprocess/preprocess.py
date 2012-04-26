@@ -105,7 +105,6 @@ def get_record(query):
   if type(query) in (int, str):  # pid
     query = key_for(query)
 
-  print(query)
   record = db.data.find_one(query)
 
   if record is None:
@@ -157,8 +156,7 @@ def get_features_2(date, map_id, p1_id, p1_race, p2_id, p2_race):
     try:
       return f(dic)
     except KeyError as e:
-      print "ERROR: {0}".format(e)
-      raise e
+      #print "ERROR: {0}".format(e)
       return default
 
   #   time
@@ -207,7 +205,7 @@ def load_data(result_paths=[], header_path=None, verbose=True):
   df = pandas.DataFrame(columns=header)
   for path in result_paths:
     df = df.append(pandas.read_csv(path,
-      header=None, names=header, parse_dates=True, verbose=verbose
+      header=None, names=header, parse_dates=True#, verbose=verbose
     ), ignore_index=True)
 
   if 'date' in df.columns.values:

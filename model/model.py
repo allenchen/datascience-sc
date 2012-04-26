@@ -14,6 +14,10 @@ from ensemble.StackingModel import StackingModel
 
 import pickle
 import os.path
+import sys
+import dateutil.parser
+import make_pickle
+import json
 
 def load_data():
     # Check to see if data.pickle exists
@@ -60,46 +64,72 @@ def create_model(pid, data):
     return player_model
 
 def predict_model_features(pid, cid, m1, m2):
-    pmodel = pickle.load(open("save/" + str(pid) + ".pickle", "rb"))
-    cmodel = pickle.load(open("save/" + str(cid) + ".pickle", "rb"))
+    try:
+      pmodel = pickle.load(open("save/" + str(pid) + ".pickle", "rb"))
+    except IOError:
+      make_pickle.make_pickle(pid)
+      pmodel = pickle.load(open("save/" + str(pid) + ".pickle", "rb"))
+
+    try:
+      cmodel = pickle.load(open("save/" + str(cid) + ".pickle", "rb"))
+    except IOError:
+      make_pickle.make_pickle(cid)
+      cmodel = pickle.load(open("save/" + str(cid) + ".pickle", "rb"))
 
     ppredictions = pmodel.predict(m1)[0]
     cpredictions = cmodel.predict(m2)[0]
     pprob = pmodel.predict_proba(m1)[0]
     cprob = cmodel.predict_proba(m2)[0]
 
-    print "==================="
-    print "WINNER: " + str(pid)
-    if ppredictions == cpredictions:
-        print "PREDICTED WINNER: TIE"
-    elif ppredictions > cpredictions:
-        print "PREDICTED WINNER: " + str(pid)
-    else:
-        print "PREDICTED WINNER: " + str(cid)
+    result = { 'winner': str(pid) }
 
-    print str(pid) + " probabilities:"
-    print pprob
-    print str(cid) + " probabilities:"
-    print cprob
-    print "==================="
+#    print "==================="
+#    print "WINNER: " + str(pid)
+    if ppredictions == cpredictions:
+#        print "PREDICTED WINNER: TIE"
+        result['result'] = 'TIE'
+    elif ppredictions > cpredictions:
+#        print "PREDICTED WINNER: " + str(pid)
+        result['result'] = str(pid)
+    else:
+#        print "PREDICTED WINNER: " + str(cid)
+        result['result'] = str(pid)
+
+#    print str(pid) + " probabilities:"
+#    print pprob
+#    print str(cid) + " probabilities:"
+#    print cprob
+#    print "==================="
+
+    result['probabilities'] = {'p' : str(pprob), 'c' : str(cprob)}
+
+    print json.dumps(result)
 
 def predict_model(time, mid, pid, prace, cid, crace):
-    m1 = pp.get_features(time, mid, pid, prace, cid, crace)
-    m2 = pp.get_features(time, mid, cid, crace, pid, prace)
+    m1 = pp.get_features_2(time, mid, pid, prace, cid, crace)
+    m2 = pp.get_features_2(time, mid, cid, crace, pid, prace)
 
     return predict_model_features(pid, cid, m1, m2)
 
 
 if __name__ == "__main__":
-    predict_model(734618, 510, 2322, 0, 70, 1)
-    predict_model(734618, 500, 2322, 0, 70, 1)
-    predict_model(734618, 510, 959, 1, 1849, 1)
-    predict_model(734618, 538, 959, 1, 1849, 1)
-    predict_model(734618, 528, 2322, 0, 959, 1)
-    predict_model(734618, 527, 959, 1, 2322, 0)
-    predict_model(734618, 479, 2322, 0, 959, 1)
-    predict_model(734618, 528, 1849, 1, 70, 1)
-    predict_model(734618, 479, 1849, 1, 70, 1)
-    predict_model(734618, 527, 1849, 1, 959, 1)
-    predict_model(734618, 499, 1849, 1, 959, 1)
-    
+    if len(sys.argv) == 1:
+      predict_model(734618, 510, 2322, 0, 70, 1)
+      predict_model(734618, 500, 2322, 0, 70, 1)
+      predict_model(734618, 510, 959, 1, 1849, 1)
+      predict_model(734618, 538, 959, 1, 1849, 1)
+      predict_model(734618, 528, 2322, 0, 959, 1)
+      predict_model(734618, 527, 959, 1, 2322, 0)
+      predict_model(734618, 479, 2322, 0, 959, 1)
+      predict_model(734618, 528, 1849, 1, 70, 1)
+      predict_model(734618, 479, 1849, 1, 70, 1)
+      predict_model(734618, 527, 1849, 1, 959, 1)
+      predict_model(734618, 499, 1849, 1, 959, 1)
+    elif len(sys.argv) == 7:
+      time, mid, pid, prace, cid, crace = sys.argv[1:]
+      mid, pid, prace, cid, crace = [int(x) for x in (mid, pid, prace, cid, crace)]
+      time = dateutil.parser.parse(time).toordinal()
+      predict_model(time, mid, pid, prace, cid, crace)
+    else:
+      raise ValueError("Usage: {0} [time, mid, pid, prace, cid, crace]")
+      
