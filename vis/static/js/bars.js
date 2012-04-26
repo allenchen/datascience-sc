@@ -28,7 +28,7 @@ function load_barchart(parties, total_width, total_height) {
     });
 }
 
-load_barchart([0,1,2], 900, 335);
+load_barchart([0,1,2], 1200, 335);
 
 /*
   var n = 4, // number of layers
@@ -117,7 +117,7 @@ function postprocess_bars(total_width, total_height) {
 	  .attr("text-anchor", "middle")
 	  .text(function(d, i) { return (i+1)%10; });
     */
-    vis.append("text")
+/*    vis.append("text")
 	.attr("class", "goobly")
 	.attr("x", maximum_x*w/mx - 70)
 	.attr("y", 0)
@@ -127,7 +127,7 @@ function postprocess_bars(total_width, total_height) {
 	.attr("font-size", "1.3em")
 	.attr("style", "font-weight:bold; fill: green;")
 	.text(my);
-    
+  */  
     vis.append("line")
 	.attr("x1", 0)
 	.attr("x2", w - x({x: .1}))

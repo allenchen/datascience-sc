@@ -14,6 +14,10 @@ a:hover {
     color:#BCD2EE;
 }
 
+.container {
+    width:1250px;
+}
+
 h1,h2,h3,h4,h5,h6 {
     color:#f0f0f0;
 }
@@ -78,7 +82,7 @@ h3 {
 }
 
 .visualization_header {
-  width:900px;
+  width:1250px;
   margin-left:auto;
   margin-right:auto;
   text-align:center;
@@ -98,11 +102,11 @@ h3.visualization_title {
 }
 
 .visualization_2set {
-  width:910px;
+  width:1250px;
 }
 
 .visualization_1set {
-    width:950px;
+    width:1250px;
 }
 
 img {

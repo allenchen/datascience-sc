@@ -29,7 +29,7 @@ window.party_colors = {
 
 window.bar_status = {
     "stacked": true,
-    "bar_width": 900,
+    "bar_width": 1250,
     "bar_height": 335
 };
 
@@ -131,7 +131,7 @@ $(document).ready(function() {
 	    $("#barchart_container").animate({ 'width': '500px' });
 	    console.log($("#barchart_container"));
 	    $(".barchart_checkbox").attr("checked", "checked");
-	    bar_status.bar_width = 900;
+	    bar_status.bar_width = 1250;
 	    bar_status.bar_height = 335;
 	    load_barchart([0,1,2], bar_status.bar_width, bar_status.bar_height); 
 	};
