@@ -8,6 +8,7 @@
 \usepackage{graphicx}
 \usepackage[lofdepth,lotdepth]{subfig}
 \usepackage{multicol}
+\usepackage{wrapfig}
 \usetikzlibrary{shapes,arrows}
 \tikzset{node distance=5cm}
 \tikzstyle{block} = [rectangle, draw,%
@@ -42,7 +43,6 @@ What's the biggest e-sport in the world? Ask anyone, and there's only one answer
 \input{data_scraping.tex}
 
 \section{Data Visualization}
-TO-DO: Allen fill this in
 \input{data_visualization.tex}
 
 \section{Data Transformation}
@@ -52,6 +52,7 @@ TO-DO: Allen fill this in
 \input{model_training.tex}
 
 \section{Conclusion}
-TO-DO: Allen fill this in
+From our observations and data product, we were able to obtain a well-constructed dataset from a well-touted source.  We were able to visualize the best players in StarCraft and understand past racial imbalance, and even find less-popular players with high skill level.  We were also able to make decent predictions of the ability of professional StarCraft players (although the prediction of a particular match is less accurate, due to the random nature of StarCraft).\\
+Although we performed some basic analysis on the data, there's still much more analysis that could have been done.  We did not consider the region of the player (players primarily practice with players from their own region, so they may be more unfamiliar playing against players not from their region).  We also did not consider factors that went into the game (what actions they took during the game), as it was far too difficult to obtain that data.  Future analysis into this data should take one or more of these factors into account to improve on our results.
 
 \end{document}
