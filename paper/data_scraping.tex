@@ -1,0 +1,35 @@
+\subsection{teamliquid}
+We obtain our data from \href{http://www.teamliquid.net/tlpd/sc2-international/games}{teamliquid's match result listings} for both the Starcraft II International and Korean sections. Their site provides such high level details for each match as the date played, map name and internal ID, and winner and loser name, internal ID, and race played. Looking through the site via a browser behaves perfectly fine, but we soon discovered that the site enforces a request rate limit on arbitrary calls (e.g. curl, HTTP libraries). We attempted to contact teamliquid by email to request access to their data, but the short answer was that we'd have to obtain the data ourselves.
+
+\subsection{Implementation}
+We implement a scraper script in Ruby that pulls information from the teamliquid site and saves it to CSV locally. The Mechanize and Nokogiri gems allow easy, object-oriented parsing and navigation of the site, and allows us to create a relatively simple yet modular framework for collecting from multiple data sources across the site. We simply input a scraper module (currently only two, for match results or for maps) and the script will cycle through the paginated table, parsing and accumulating the data. When we first wrote the script, there were 1323 pages of results, so we also added parameters to specify start and end pages, in order to parallelize the scrape across multiple Apple Orchard machines. The final dataset of results was just over 4 megabytes in size, plus a small constant-size list of approximately 90 maps.
+
+\subsection{Extracted Data}
+We obtain the following fields from match results:
+\begin{multicols}{2}
+\begin{itemize}
+  \item \verb$date$
+  \item \verb$league_id$
+  \item \verb$league_name$
+  \item \verb$map_id$
+  \item \verb$map_name$
+  \item \verb$winner_id$
+  \item \verb$winner_name$
+  \item \verb$winner_race$
+  \item \verb$loser_id$
+  \item \verb$loser_name$
+  \item \verb$loser_race$
+\end{itemize}
+\end{multicols}
+
+We obtain the following fields from the table of maps:
+\begin{multicols}{2}
+\begin{itemize}
+  \item \verb$map_id$
+  \item \verb$map_name$
+  \item \verb$map_size$
+  \item \verb$map_spots$: Number of starting positions
+\end{itemize}
+\end{multicols}
+
+

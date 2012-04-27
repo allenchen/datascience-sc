@@ -1,0 +1,22 @@
+\subsection{Preprocessing and API}
+
+In order to interface with the machine learning system, the data must be coerced to a specific format:
+
+\begin{verbatim}
+  player_entry = {
+    'data': numpy.array([[feature1, feature2, ...],
+                          ...
+                        ]),
+    'outcomes': numpy.array([outcome1, outcome2, ...])
+  }
+\end{verbatim}
+
+where each element of the \verb$data$ array represents features of a match resulting in the correspondingly indexed \verb$outcome$.
+
+To build the features, we load the CSV files from the scraper script through Pandas, after which time we can gather various statistics, such as win percentage for a given player against another player, race, or map, that will be used as features in the prediction models later on. 
+
+This processing script exposes two API calls: \verb$process_data()$ and \verb$get_feature(input)$. The former is run once per data scrape, and generates the above \verb$player_entry$ records for every player in the dataset for use in training models in the next stage. The latter returns a player's feature vector for online predictions, given situational input variables including prediction date, map id, and both players' ids.
+
+\subsection{Persistence}
+
+There is also another non-API function in the preprocessing script for persisting the data; while regenerating all features from the CSV is most accurate, it also performs too slowly for online predictions (on the order of 1 minute per prediction on an EC2 micro instance). To alleviate this we cache intermediate calculations in a MongoDB database, allowing our program to recall and/or recalculate features in real-time.
